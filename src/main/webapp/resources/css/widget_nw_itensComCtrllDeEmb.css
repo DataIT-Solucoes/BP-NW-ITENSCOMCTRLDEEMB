@@ -1,0 +1,962 @@
+/*
+ * widget_nw_itensComCtrllDeEmb
+ * Mesma paleta e mesmas medidas do widget_nw_embalagens (prefixo de classe: nwi).
+ * Todos os seletores começam com ".fluig-style-guide.nwi": sem isso as regras do Style Guide
+ * (ex.: ".fluig-style-guide header", ".fluig-style-guide h2") têm especificidade maior e vencem.
+ */
+
+/* Paleta Branco Peres (6 cores oficiais + tons derivados para hover, bordas e texto secundário) */
+.fluig-style-guide.nwi {
+    --nwi-verde: #006B35;               /* Verde institucional: ação principal, foco, seleção */
+    --nwi-verde-escuro: #00552A;        /* hover do verde */
+    --nwi-amarelo: #FFD200;             /* Amarelo solar: destaque pontual (linha nova/editada) */
+    --nwi-vermelho: #ED1C24;            /* Vermelho da marca: ação destrutiva */
+    --nwi-vermelho-escuro: #C4161C;     /* texto de erro e hover (o vermelho puro tem contraste baixo em letra pequena) */
+    --nwi-tinta: #20201E;               /* Carvão: texto e ícones */
+    --nwi-tinta-suave: #5E5D57;         /* texto secundário (derivado do carvão) */
+    --nwi-marfim: #F7F5EE;              /* Marfim: superfícies (filtros, cabeçalho/rodapé da tabela) */
+    --nwi-nevoa: #E5EDE3;               /* Verde névoa: fundo de seleção e hover */
+    --nwi-linha: #E3E1D8;               /* bordas (derivado do marfim) */
+    --nwi-borda-campo: #D3D1C7;         /* borda dos campos */
+
+    padding: 28px;
+    font-family: "Mulish", "Open Sans", Helvetica, Arial, sans-serif;
+    color: var(--nwi-tinta);
+}
+
+/* ---------- Cabeçalho ---------- */
+.fluig-style-guide.nwi .nwi-cabecalho {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding-bottom: 24px;
+}
+
+/* Selo redondo: anel verde (mesma cor do indicador da aba) e centro transparente */
+.fluig-style-guide.nwi .nwi-selo {
+    flex: 0 0 auto;
+    display: inline-flex;
+    box-sizing: border-box;
+    width: 56px;
+    height: 56px;
+    border: 3px solid var(--nwi-verde);
+    border-radius: 50%;
+}
+
+.fluig-style-guide.nwi .nwi-selo-miolo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+    color: var(--nwi-tinta);
+    font-size: 24px;
+}
+
+.fluig-style-guide.nwi .nwi-cabecalho-texto {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.fluig-style-guide.nwi .nwi-cabecalho-acoes {
+    flex: 0 0 auto;
+    margin-left: auto;
+}
+
+.fluig-style-guide.nwi .nwi-cabecalho-titulo {
+    margin: 0;
+    font-family: inherit;
+    font-size: 26px;
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    color: var(--nwi-tinta);
+}
+
+.fluig-style-guide.nwi .nwi-cabecalho-subtitulo {
+    margin: 6px 0 0;
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--nwi-tinta-suave);
+}
+
+/* ---------- Abas ---------- */
+.fluig-style-guide.nwi .nwi-tabs {
+    position: relative;
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--nwi-linha);
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.fluig-style-guide.nwi .nwi-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+.fluig-style-guide.nwi .nwi-tab {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    border-radius: 8px 8px 0 0;
+    padding: 12px 18px;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--nwi-tinta-suave);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.fluig-style-guide.nwi .nwi-tab:hover {
+    color: var(--nwi-tinta);
+    background-color: rgba(32, 32, 30, 0.05);
+}
+
+.fluig-style-guide.nwi .nwi-tab i {
+    margin-right: 8px;
+    vertical-align: -1px;
+}
+
+.fluig-style-guide.nwi .nwi-tab.is-active {
+    color: var(--nwi-tinta);
+    font-weight: 700;
+    background-color: var(--nwi-nevoa);
+}
+
+.fluig-style-guide.nwi .nwi-tab:focus-visible {
+    outline: 2px solid var(--nwi-verde);
+    outline-offset: -2px;
+}
+
+.fluig-style-guide.nwi .nwi-tabs-indicador {
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    height: 3px;
+    width: 0;
+    border-radius: 3px 3px 0 0;
+    background: var(--nwi-verde);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+}
+
+/* ---------- Filtros ---------- */
+.fluig-style-guide.nwi .nwi-filtros {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(150px, 0.7fr) auto;
+    align-items: start;
+    gap: 16px 20px;
+    margin: 24px 0 28px;
+    padding: 20px;
+    border: 1px solid var(--nwi-linha);
+    border-radius: 14px;
+    background-color: var(--nwi-marfim);
+}
+
+/* o botão Buscar alinha pela altura do campo, não pela da dica */
+.fluig-style-guide.nwi .nwi-filtros-acoes {
+    display: flex;
+    gap: 10px;
+    margin-top: 25px;
+}
+
+.fluig-style-guide.nwi .nwi-campo-rotulo {
+    display: block;
+    margin: 0 0 6px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--nwi-tinta);
+}
+
+.fluig-style-guide.nwi .nwi-campo-caixa {
+    position: relative;
+}
+
+.fluig-style-guide.nwi .nwi-campo-caixa > i {
+    position: absolute;
+    top: 22px;
+    left: 14px;
+    transform: translateY(-50%);
+    font-size: 15px;
+    color: var(--nwi-tinta-suave);
+    pointer-events: none;
+    transition: color 0.2s ease;
+}
+
+.fluig-style-guide.nwi .nwi-campo-input {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    height: 44px;
+    margin: 0;
+    padding: 0 14px 0 40px;
+    border: 1px solid var(--nwi-borda-campo);
+    border-radius: 10px;
+    background-color: #fff;
+    box-shadow: none;
+    font-family: inherit;
+    font-size: 15px;
+    color: var(--nwi-tinta);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.fluig-style-guide.nwi .nwi-campo-input::placeholder {
+    color: #8E8C84;
+    opacity: 1;
+}
+
+.fluig-style-guide.nwi .nwi-campo-input:hover {
+    border-color: #B5B3A9;
+}
+
+.fluig-style-guide.nwi .nwi-campo-input:focus {
+    outline: none;
+    border-color: var(--nwi-verde);
+    box-shadow: 0 0 0 3px rgba(0, 107, 53, 0.18);
+}
+
+.fluig-style-guide.nwi .nwi-campo-caixa:focus-within > i {
+    color: var(--nwi-verde);
+}
+
+/* campo sem ícone dentro */
+.fluig-style-guide.nwi .nwi-campo-input.nwi-campo-input-simples {
+    padding: 0 14px;
+}
+
+/* campo preenchido pelo sistema (Unidade) e campos travados na edição */
+.fluig-style-guide.nwi .nwi-campo-input[readonly] {
+    border-color: var(--nwi-linha);
+    background-color: var(--nwi-marfim);
+    color: var(--nwi-tinta-suave);
+    cursor: default;
+}
+
+.fluig-style-guide.nwi .nwi-campo-input[readonly]:hover {
+    border-color: var(--nwi-linha);
+}
+
+.fluig-style-guide.nwi .nwi-campo-input[readonly]:focus {
+    border-color: var(--nwi-borda-campo);
+    box-shadow: none;
+}
+
+/* ---------- Select (Situação) ---------- */
+.fluig-style-guide.nwi .nwi-campo-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding: 0 38px 0 14px;
+    cursor: pointer;
+}
+
+.fluig-style-guide.nwi .nwi-campo-caixa-select::after {
+    content: "";
+    position: absolute;
+    top: 22px;
+    right: 16px;
+    width: 0;
+    height: 0;
+    margin-top: -2px;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid var(--nwi-tinta-suave);
+    pointer-events: none;
+}
+
+/* ---------- Autocomplete ---------- */
+.fluig-style-guide.nwi .nwi-sugestoes {
+    position: absolute;
+    z-index: 30;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    max-height: 260px;
+    margin: 0;
+    padding: 6px;
+    overflow-y: auto;
+    list-style: none;
+    border: 1px solid var(--nwi-linha);
+    border-radius: 12px;
+    background-color: #fff;
+    box-shadow: 0 12px 32px rgba(32, 32, 30, 0.16);
+}
+
+.fluig-style-guide.nwi .nwi-sugestoes[hidden] {
+    display: none;
+}
+
+.fluig-style-guide.nwi .nwi-sugestao {
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.35;
+    color: var(--nwi-tinta);
+    cursor: pointer;
+}
+
+.fluig-style-guide.nwi .nwi-sugestao-codigo {
+    margin-right: 6px;
+    font-weight: 700;
+}
+
+.fluig-style-guide.nwi .nwi-sugestao:hover,
+.fluig-style-guide.nwi .nwi-sugestao.is-ativa {
+    background-color: var(--nwi-nevoa);
+}
+
+.fluig-style-guide.nwi .nwi-sugestao-vazia,
+.fluig-style-guide.nwi .nwi-sugestao-vazia:hover {
+    padding: 10px 12px;
+    background-color: transparent;
+    font-size: 14px;
+    color: var(--nwi-tinta-suave);
+    cursor: default;
+}
+
+/* ---------- Botões ---------- */
+.fluig-style-guide.nwi .nwi-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-sizing: border-box;
+    height: 44px;
+    margin: 0;
+    padding: 0 20px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.fluig-style-guide.nwi .nwi-btn i {
+    font-size: 15px;
+}
+
+.fluig-style-guide.nwi .nwi-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 107, 53, 0.28);
+}
+
+.fluig-style-guide.nwi .nwi-btn:active {
+    transform: translateY(1px);
+}
+
+/* Novo / Salvar: ação principal (verde institucional, texto branco) */
+.fluig-style-guide.nwi .nwi-btn-destaque {
+    background-color: var(--nwi-verde);
+    color: #fff;
+}
+
+.fluig-style-guide.nwi .nwi-btn-destaque:hover {
+    background-color: var(--nwi-verde-escuro);
+}
+
+/* Buscar / Cancelar: contorno verde, ganha fundo verde névoa no hover */
+.fluig-style-guide.nwi .nwi-btn-contorno {
+    border-color: var(--nwi-verde);
+    background-color: #fff;
+    color: var(--nwi-tinta);
+}
+
+.fluig-style-guide.nwi .nwi-btn-contorno:hover {
+    background-color: var(--nwi-nevoa);
+}
+
+/* ---------- Tabela (Tabulator, tema "simple" sobrescrito com a paleta da tela) ---------- */
+.fluig-style-guide.nwi .nwi-tabela.tabulator {
+    border: 1px solid var(--nwi-linha);
+    border-radius: 14px;
+    overflow: hidden;
+    background-color: #fff;
+    font-family: inherit;
+    font-size: 15px;
+    color: var(--nwi-tinta);
+}
+
+.fluig-style-guide.nwi .nwi-tabela.tabulator .tabulator-header {
+    border-bottom: 1px solid var(--nwi-linha);
+    background-color: var(--nwi-marfim);
+    color: var(--nwi-tinta-suave);
+    font-weight: 700;
+}
+
+.fluig-style-guide.nwi .nwi-tabela.tabulator .tabulator-header .tabulator-col {
+    border-right: 0;
+    background-color: transparent;
+}
+
+.fluig-style-guide.nwi .nwi-tabela.tabulator .tabulator-header .tabulator-col .tabulator-col-content {
+    padding: 14px 20px;
+}
+
+.fluig-style-guide.nwi .nwi-tabela.tabulator .tabulator-header .tabulator-col .tabulator-col-title {
+    font-size: 13px;
+}
+
+.fluig-style-guide.nwi .nwi-tabela.tabulator .tabulator-header .tabulator-col.tabulator-sortable:hover {
+    background-color: rgba(32, 32, 30, 0.04);
+    color: var(--nwi-tinta);
+}
+
+/* seta de ordenação: cinza quente quando inativa, verde na coluna ordenada.
+   [aria-sort="none"] + .tabulator-col-content: precisa vencer a regra do tema do Tabulator */
+.fluig-style-guide.nwi .nwi-tabela.tabulator .tabulator-header .tabulator-col[aria-sort="none"] .tabulator-col-content .tabulator-col-sorter .tabulator-arrow {
+    border-bottom-color: #C4C2B8;
+}
+
+.fluig-style-guide.nwi .nwi-tabela.tabulator .tabulator-header .tabulator-col[aria-sort="ascending"] .tabulator-col-sorter .tabulator-arrow {
+    border-bottom-color: var(--nwi-verde);
+}
+
+.fluig-style-guide.nwi .nwi-tabela.tabulator .tabulator-header .tabulator-col[aria-sort="descending"] .tabulator-col-sorter .tabulator-arrow {
+    border-top-color: var(--nwi-verde);
+}
+
+/* Ações não ordena, mas mostra uma seta igual à das outras colunas (mesmo tamanho, cor e posição) */
+.fluig-style-guide.nwi .nwi-tabela.tabulator .tabulator-header .tabulator-col.nwi-col-acoes {
+    position: relative;
+    cursor: default;
+}
+
+.fluig-style-guide.nwi .nwi-tabela.tabulator .tabulator-header .tabulator-col.nwi-col-acoes .tabulator-col-title {
+    padding-right: 25px;
+}
+
+.fluig-style-guide.nwi .nwi-tabela.tabulator .tabulator-header .tabulator-col.nwi-col-acoes::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: 24px;
+    width: 0;
+    height: 0;
+    margin-top: -3px;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 6px solid #C4C2B8;
+    pointer-events: none;
+}
+
+.fluig-style-guide.nwi .nwi-tabela.tabulator .tabulator-row {
+    border-bottom: 1px solid #EEECE4;
+    background-color: #fff;
+}
+
+.fluig-style-guide.nwi .nwi-tabela.tabulator .tabulator-row:hover {
+    background-color: var(--nwi-nevoa);
+}
+
+.fluig-style-guide.nwi .nwi-tabela.tabulator .tabulator-row .tabulator-cell {
+    padding: 14px 20px;
+    border-right: 0;
+}
+
+.fluig-style-guide.nwi .nwi-tabela.tabulator .tabulator-row .tabulator-cell:first-child {
+    font-weight: 600;
+}
+
+/* célula "código — descrição": código em negrito, descrição em tom secundário */
+.fluig-style-guide.nwi .nwi-codigo {
+    font-weight: 700;
+}
+
+.fluig-style-guide.nwi .nwi-descricao {
+    color: var(--nwi-tinta-suave);
+}
+
+.fluig-style-guide.nwi .nwi-sigla {
+    display: inline-block;
+    min-width: 40px;
+    padding: 3px 10px;
+    border: 1px solid var(--nwi-linha);
+    border-radius: 999px;
+    background-color: var(--nwi-marfim);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-align: center;
+    color: var(--nwi-tinta);
+}
+
+.fluig-style-guide.nwi .nwi-capacidade {
+    font-variant-numeric: tabular-nums;
+}
+
+.fluig-style-guide.nwi .nwi-tabela.tabulator .tabulator-placeholder .tabulator-placeholder-contents {
+    padding: 32px 16px;
+    font-size: 15px;
+    font-weight: 400;
+    color: var(--nwi-tinta-suave);
+}
+
+/* rodapé: contador à esquerda, páginas à direita */
+.fluig-style-guide.nwi .nwi-tabela.tabulator .tabulator-footer {
+    border-top: 1px solid var(--nwi-linha);
+    background-color: var(--nwi-marfim);
+    color: var(--nwi-tinta-suave);
+    font-weight: 400;
+}
+
+.fluig-style-guide.nwi .nwi-tabela.tabulator .tabulator-footer .tabulator-footer-contents {
+    padding: 10px 16px;
+}
+
+.fluig-style-guide.nwi .nwi-tabela.tabulator .tabulator-footer .tabulator-page-counter {
+    font-size: 13px;
+}
+
+.fluig-style-guide.nwi .nwi-tabela.tabulator .tabulator-footer .tabulator-page {
+    min-width: 34px;
+    height: 34px;
+    margin: 0 2px;
+    padding: 0 8px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--nwi-tinta);
+}
+
+.fluig-style-guide.nwi .nwi-tabela.tabulator .tabulator-footer .tabulator-page:not(:disabled):hover {
+    border-color: var(--nwi-linha);
+    background-color: #fff;
+    color: var(--nwi-tinta);
+}
+
+.fluig-style-guide.nwi .nwi-tabela.tabulator .tabulator-footer .tabulator-page.active {
+    border-color: var(--nwi-verde);
+    background-color: #fff;
+    color: var(--nwi-tinta);
+}
+
+.fluig-style-guide.nwi .nwi-tabela.tabulator .tabulator-footer .tabulator-page:disabled {
+    opacity: 0.35;
+}
+
+/* setas da paginação (Bootstrap Icons): o traço da fonte é fino, o stroke engrossa */
+.fluig-style-guide.nwi .nwi-tabela.tabulator .tabulator-footer .tabulator-page i {
+    display: inline-block;
+    font-size: 14px;
+    line-height: 1;
+    vertical-align: -1px;
+    -webkit-text-stroke: 1.2px currentColor;
+}
+
+.fluig-style-guide.nwi .nwi-tabela-erro {
+    margin: 0;
+    padding: 24px;
+    border: 1px solid var(--nwi-linha);
+    border-radius: 14px;
+    color: var(--nwi-tinta-suave);
+}
+
+/* ---------- Switch de situação (na linha da tabela) ---------- */
+.fluig-style-guide.nwi .nwi-switch {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-weight: 400;
+    cursor: pointer;
+}
+
+.fluig-style-guide.nwi .nwi-switch input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+}
+
+.fluig-style-guide.nwi .nwi-switch-trilho {
+    position: relative;
+    width: 38px;
+    height: 21px;
+    border-radius: 11px;
+    background-color: #9C9A90;
+    transition: background-color 0.2s ease;
+}
+
+.fluig-style-guide.nwi .nwi-switch-trilho::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 17px;
+    height: 17px;
+    border-radius: 50%;
+    background-color: #fff;
+    box-shadow: 0 1px 3px rgba(32, 32, 30, 0.3);
+    transition: transform 0.2s ease;
+}
+
+.fluig-style-guide.nwi .nwi-switch input:checked + .nwi-switch-trilho {
+    background-color: var(--nwi-verde);
+}
+
+.fluig-style-guide.nwi .nwi-switch input:checked + .nwi-switch-trilho::after {
+    transform: translateX(17px);
+}
+
+.fluig-style-guide.nwi .nwi-switch input:focus-visible + .nwi-switch-trilho {
+    box-shadow: 0 0 0 3px rgba(0, 107, 53, 0.28);
+}
+
+.fluig-style-guide.nwi .nwi-switch-texto {
+    font-size: 13px;
+    color: var(--nwi-tinta-suave);
+}
+
+/* ---------- Coluna Ações ---------- */
+.fluig-style-guide.nwi .nwi-acoes {
+    display: inline-flex;
+    gap: 6px;
+}
+
+.fluig-style-guide.nwi .nwi-acao {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    margin: 0;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: transparent;
+    font-size: 15px;
+    line-height: 1;
+    color: var(--nwi-tinta-suave);
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.fluig-style-guide.nwi .nwi-acao:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 107, 53, 0.28);
+}
+
+.fluig-style-guide.nwi .nwi-acao-editar:hover {
+    border-color: var(--nwi-verde);
+    background-color: #fff;
+    color: var(--nwi-tinta);
+}
+
+.fluig-style-guide.nwi .nwi-acao-excluir:hover {
+    border-color: rgba(237, 28, 36, 0.35);
+    background-color: rgba(237, 28, 36, 0.08);
+    color: var(--nwi-vermelho-escuro);
+}
+
+/* linha recém-cadastrada ou editada brilha em amarelo solar */
+.fluig-style-guide.nwi .nwi-tabela.tabulator .tabulator-row.nwi-linha-nova {
+    animation: nwi-linha-nova 2.2s ease-out;
+}
+
+@keyframes nwi-linha-nova {
+    0%, 35% { background-color: rgba(255, 210, 0, 0.32); }
+    100% { background-color: #fff; }
+}
+
+/* ---------- Modal de cadastro (<dialog> nativo) ---------- */
+.fluig-style-guide.nwi .nwi-modal {
+    box-sizing: border-box;
+    width: min(720px, calc(100vw - 32px));
+    max-width: none;
+    max-height: calc(100vh - 32px);
+    margin: auto;
+    padding: 0;
+    border: 0;
+    border-radius: 16px;
+    background-color: #fff;
+    box-shadow: 0 24px 64px rgba(32, 32, 30, 0.22);
+    font-family: inherit;
+    color: var(--nwi-tinta);
+    overflow: auto;
+}
+
+.fluig-style-guide.nwi .nwi-modal[open] {
+    animation: nwi-modal-entrar 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* ::backdrop não herda variáveis CSS em todos os navegadores: cores escritas direto */
+.fluig-style-guide.nwi .nwi-modal::backdrop {
+    background-color: rgba(32, 32, 30, 0.48);
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
+}
+
+.fluig-style-guide.nwi .nwi-modal[open]::backdrop {
+    animation: nwi-fundo-entrar 0.22s ease-out;
+}
+
+@keyframes nwi-modal-entrar {
+    from { opacity: 0; transform: translateY(10px) scale(0.98); }
+    to { opacity: 1; transform: none; }
+}
+
+@keyframes nwi-fundo-entrar {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.fluig-style-guide.nwi .nwi-modal-form {
+    margin: 0;
+}
+
+.fluig-style-guide.nwi .nwi-modal-cabecalho {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 24px 24px 4px;
+}
+
+.fluig-style-guide.nwi .nwi-modal-titulo {
+    margin: 0;
+    font-family: inherit;
+    font-size: 20px;
+    font-weight: 800;
+    line-height: 1.25;
+    color: var(--nwi-tinta);
+}
+
+.fluig-style-guide.nwi .nwi-modal-subtitulo {
+    margin: 4px 0 0;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--nwi-tinta-suave);
+}
+
+.fluig-style-guide.nwi .nwi-modal-fechar {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    margin: -6px -8px 0 0;
+    padding: 0;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    font-size: 16px;
+    color: var(--nwi-tinta-suave);
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.fluig-style-guide.nwi .nwi-modal-fechar:hover {
+    background-color: rgba(32, 32, 30, 0.05);
+    color: var(--nwi-tinta);
+}
+
+.fluig-style-guide.nwi .nwi-modal-fechar:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 107, 53, 0.28);
+}
+
+.fluig-style-guide.nwi .nwi-modal-corpo {
+    padding: 20px 24px 8px;
+}
+
+/* aviso do topo do modal */
+.fluig-style-guide.nwi .nwi-nota {
+    margin: 0 0 20px;
+    padding: 12px 16px;
+    border-left: 3px solid var(--nwi-verde);
+    border-radius: 0 10px 10px 0;
+    background-color: var(--nwi-nevoa);
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--nwi-tinta);
+}
+
+.fluig-style-guide.nwi .nwi-modal-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px 20px;
+}
+
+.fluig-style-guide.nwi .nwi-campo-dica {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: var(--nwi-tinta-suave);
+}
+
+.fluig-style-guide.nwi .nwi-campo-erro {
+    margin: 6px 0 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--nwi-vermelho-escuro);
+}
+
+.fluig-style-guide.nwi .nwi-campo-erro:empty {
+    display: none;
+}
+
+.fluig-style-guide.nwi .nwi-campo-input.is-invalido,
+.fluig-style-guide.nwi .nwi-campo-input.is-invalido:hover {
+    border-color: var(--nwi-vermelho-escuro);
+}
+
+.fluig-style-guide.nwi .nwi-campo-input.is-invalido:focus {
+    border-color: var(--nwi-vermelho-escuro);
+    box-shadow: 0 0 0 3px rgba(237, 28, 36, 0.18);
+}
+
+.fluig-style-guide.nwi .nwi-modal-rodape {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 20px 24px 24px;
+}
+
+/* confirmação de exclusão */
+.fluig-style-guide.nwi .nwi-modal.nwi-modal-pequeno {
+    width: min(420px, calc(100vw - 32px));
+}
+
+.fluig-style-guide.nwi .nwi-modal-confirmacao {
+    padding: 28px 24px 0;
+}
+
+.fluig-style-guide.nwi .nwi-confirmacao-icone {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+    border-radius: 50%;
+    background-color: rgba(237, 28, 36, 0.1);
+    font-size: 20px;
+    color: var(--nwi-vermelho-escuro);
+}
+
+.fluig-style-guide.nwi .nwi-modal-confirmacao .nwi-modal-subtitulo {
+    margin-top: 8px;
+}
+
+.fluig-style-guide.nwi .nwi-modal-confirmacao strong {
+    font-weight: 700;
+    color: var(--nwi-tinta);
+}
+
+.fluig-style-guide.nwi .nwi-btn-perigo {
+    background-color: var(--nwi-vermelho);
+    color: #fff;
+}
+
+.fluig-style-guide.nwi .nwi-btn-perigo:hover {
+    background-color: var(--nwi-vermelho-escuro);
+}
+
+/* ---------- Telas médias: filtros em 2 colunas ---------- */
+@media (max-width: 1199px) {
+    .fluig-style-guide.nwi .nwi-filtros {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .fluig-style-guide.nwi .nwi-filtros-acoes {
+        grid-column: 1 / -1;
+        justify-content: flex-end;
+        margin-top: 0;
+    }
+}
+
+/* ---------- Celular ---------- */
+@media (max-width: 767px) {
+    .fluig-style-guide.nwi {
+        padding: 20px 16px;
+    }
+
+    .fluig-style-guide.nwi .nwi-filtros {
+        grid-template-columns: minmax(0, 1fr);
+        padding: 16px;
+    }
+
+    .fluig-style-guide.nwi .nwi-modal-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .fluig-style-guide.nwi .nwi-modal-cabecalho {
+        padding: 20px 20px 4px;
+    }
+
+    .fluig-style-guide.nwi .nwi-modal-corpo {
+        padding: 16px 20px 8px;
+    }
+
+    .fluig-style-guide.nwi .nwi-modal-rodape {
+        padding: 16px 20px 20px;
+    }
+
+    .fluig-style-guide.nwi .nwi-modal-rodape .nwi-btn {
+        flex: 1 1 0;
+    }
+
+    .fluig-style-guide.nwi .nwi-cabecalho {
+        flex-wrap: wrap;
+        gap: 14px;
+        padding-bottom: 18px;
+    }
+
+    .fluig-style-guide.nwi .nwi-cabecalho-acoes {
+        flex: 1 1 100%;
+    }
+
+    .fluig-style-guide.nwi .nwi-cabecalho-acoes .nwi-btn,
+    .fluig-style-guide.nwi .nwi-filtros-acoes .nwi-btn {
+        flex: 1 1 0;
+        width: 100%;
+    }
+
+    .fluig-style-guide.nwi .nwi-selo {
+        width: 46px;
+        height: 46px;
+    }
+
+    .fluig-style-guide.nwi .nwi-selo-miolo {
+        font-size: 18px;
+    }
+
+    .fluig-style-guide.nwi .nwi-cabecalho-titulo {
+        font-size: 21px;
+    }
+
+    .fluig-style-guide.nwi .nwi-cabecalho-subtitulo {
+        font-size: 14px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .fluig-style-guide.nwi .nwi-tab,
+    .fluig-style-guide.nwi .nwi-tabs-indicador,
+    .fluig-style-guide.nwi .nwi-campo-caixa > i,
+    .fluig-style-guide.nwi .nwi-campo-input,
+    .fluig-style-guide.nwi .nwi-btn,
+    .fluig-style-guide.nwi .nwi-modal-fechar,
+    .fluig-style-guide.nwi .nwi-acao,
+    .fluig-style-guide.nwi .nwi-switch-trilho,
+    .fluig-style-guide.nwi .nwi-switch-trilho::after {
+        transition: none;
+    }
+
+    .fluig-style-guide.nwi .nwi-modal[open],
+    .fluig-style-guide.nwi .nwi-modal[open]::backdrop,
+    .fluig-style-guide.nwi .nwi-tabela.tabulator .tabulator-row.nwi-linha-nova {
+        animation: none;
+    }
+}

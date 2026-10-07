@@ -47,8 +47,8 @@
             <div class="nwi-campo-caixa nwi-campo-caixa-select">
                 <select id="nwi-filtro-situacao-${instanceId}" class="nwi-campo-input nwi-campo-select" data-filtro-situacao>
                     <option value="todos">Todos</option>
-                    <option value="ativo">Ativo</option>
-                    <option value="inativo">Inativo</option>
+                    <option value="true">Ativo</option>
+                    <option value="false">Inativo</option>
                 </select>
             </div>
         </div>

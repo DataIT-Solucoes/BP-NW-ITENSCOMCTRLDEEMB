@@ -93,7 +93,7 @@ var widget_nw_itensComCtrllDeEmb = (function () {
         return Number(valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
     }
 
-    // O consultarParametros devolve só os códigos; sem descrição, a célula mostra apenas o código.
+    // O consultarParametros devolve as descrições (descricaoEstabelecimento, descricaoItem, descricaoTipo); sem descrição, a célula mostra apenas o código.
     function criarCelulaCodigoDescricao(codigo, descricao) {
         var $celula = $('<span>').append($('<span>', { 'class': 'nwi-codigo', text: codigo }));
         if (descricao) $celula.append($('<span>', { 'class': 'nwi-descricao', text: ' — ' + descricao }));
@@ -104,10 +104,10 @@ var widget_nw_itensComCtrllDeEmb = (function () {
     function converterParametroEmItem(parametro) {
         return {
             id: Number(parametro.idParam),
-            estCodigo: parametro.codEstabel, estDescricao: '',
-            itemCodigo: parametro.item, itemDescricao: '',
+            estCodigo: parametro.codEstabel, estDescricao: parametro.descricaoEstabelecimento || '',
+            itemCodigo: parametro.item, itemDescricao: parametro.descricaoItem || '',
             unidade: parametro.unidade,
-            tipoCodigo: parametro.codTipo, tipoDescricao: '',
+            tipoCodigo: parametro.codTipo, tipoDescricao: parametro.descricaoTipo || '',
             capacidade: Number(parametro.capacidade),
             ativo: parametro.ativo === true,
             versao: parametro.versao
@@ -737,7 +737,8 @@ var widget_nw_itensComCtrllDeEmb = (function () {
         },
 
         // busca todas as páginas (cursor proximoId) e só então mostra a tabela
-        carregarParametros: function () {
+        // filtros (opcional): { parametros: filtros do consultarParametros }
+        carregarParametros: function (filtros) {
             var self = this;
             var sequenciaDestaCarga = ++this.sequenciaCarga;
             var itensCarregados = [];
@@ -753,10 +754,13 @@ var widget_nw_itensComCtrllDeEmb = (function () {
             }
 
             function consultarPagina(cursor) {
-                var parametros = { limite: LIMITE_PAGINA_PARAMETROS };
+                var parametros = $.extend({ limite: LIMITE_PAGINA_PARAMETROS }, filtros && filtros.parametros);
                 if (cursor) parametros.aposId = cursor;
 
                 self.consultaCarga = chamarEmbalagens(ACAO_CONSULTAR_PARAMETROS, parametros);
+
+                
+
                 return self.consultaCarga.then(function (resultado) {
                     if (!cargaAindaValida()) return;
                     self.consultaCarga = null;
@@ -779,6 +783,9 @@ var widget_nw_itensComCtrllDeEmb = (function () {
                 self.mostrarErroDaCarga(erro && erro.message || 'Não foi possível consultar os itens controlados.');
             });
         },
+
+
+        //===========================================================================
 
         cancelarCarga: function () {
             if (this.consultaCarga && this.consultaCarga.abort) this.consultaCarga.abort();
@@ -805,42 +812,48 @@ var widget_nw_itensComCtrllDeEmb = (function () {
 
         // ---------- Filtros ----------
 
+        // Buscar consulta o servidor com os filtros escolhidos (estabelecimento, item, tipo e situação vão no consultarParametros)
         buscar: function () {
             if (!this.tabela) return;
-            // depois de uma falha na carga, Buscar tenta carregar de novo
-            if (this.cargaFalhou) {
-                this.carregarParametros();
-                return;
-            }
+            var filtros = this.montarFiltrosDaBusca();
+            if (filtros) this.carregarParametros(filtros);
+        },
+
+        // null = há campo digitado sem escolha na lista (a busca só aceita o código escolhido)
+        montarFiltrosDaBusca: function () {
+            var parametros = {};
+            var rotulos = { '[data-filtro-est]': 'o estabelecimento', '[data-filtro-item]': 'o item', '[data-filtro-tipo]': 'o tipo de embalagem' };
+            var codigos = {};
+            var valido = true;
             var self = this;
-            var estabelecimento = this.lerFiltroComAutocomplete('[data-filtro-est]');
-            var item = this.lerFiltroComAutocomplete('[data-filtro-item]');
-            var tipo = this.lerFiltroComAutocomplete('[data-filtro-tipo]');
-            var situacao = $('[data-filtro-situacao]', this.DOM).val();
 
-            if (!estabelecimento && !item && !tipo && situacao === TODOS) {
-                this.tabela.clearFilter();
-                return;
-            }
-
-            this.tabela.setFilter(function (linha) {
-                return self.corresponde(estabelecimento, linha.estCodigo, linha.estDescricao)
-                    && self.corresponde(item, linha.itemCodigo, linha.itemDescricao)
-                    && self.corresponde(tipo, linha.tipoCodigo, linha.tipoDescricao)
-                    && (situacao === TODOS || (situacao === 'ativo') === !!linha.ativo);
+            $.each(rotulos, function (seletor, rotulo) {
+                // o autocomplete cria um clone .tt-hint com os mesmos atributos: vale só o campo real
+                var $campo = $(seletor, self.DOM).not('.tt-hint').first();
+                var codigo = $campo.data('codigo');
+                if (!codigo && $.trim($campo.val())) {
+                    self.avisar('Escolha ' + rotulo + ' na lista para buscar.', 'info');
+                    valido = false;
+                }
+                codigos[seletor] = codigo ? String(codigo) : '';
             });
-        },
+            if (!valido) return null;
 
-        // quando a opção veio da lista, vale o código escolhido; digitação livre vira busca por texto
-        lerFiltroComAutocomplete: function (seletor) {
-            var $campo = $(seletor, this.DOM);
-            return { codigo: $campo.data('codigo') || null, texto: normalizarTexto($campo.val()) };
-        },
+            if (codigos['[data-filtro-est]']) {
+                parametros.estabelDe = codigos['[data-filtro-est]'];
+                parametros.estabelAte = codigos['[data-filtro-est]'];
+            }
+            if (codigos['[data-filtro-item]']) {
+                parametros.itemDe = codigos['[data-filtro-item]'];
+                parametros.itemAte = codigos['[data-filtro-item]'];
+            }
+            // valor do select: 'todos', 'true' (Ativo) ou 'false' (Inativo)
+            var situacao = $('[data-filtro-situacao]', this.DOM).val();
+            if (situacao !== TODOS) parametros.ativo = situacao === 'true';
 
-        corresponde: function (filtro, codigo, descricao) {
-            if (!filtro || (!filtro.codigo && !filtro.texto)) return true;
-            if (filtro.codigo) return String(codigo) === String(filtro.codigo);
-            return normalizarTexto(codigo + ' ' + descricao).indexOf(filtro.texto) !== -1;
+            if (codigos['[data-filtro-tipo]']) parametros.codTipo = codigos['[data-filtro-tipo]'];
+
+            return { parametros: parametros };
         },
 
         // ---------- Modal de cadastro (<dialog> nativo, não o FLUIGC.modal) ----------

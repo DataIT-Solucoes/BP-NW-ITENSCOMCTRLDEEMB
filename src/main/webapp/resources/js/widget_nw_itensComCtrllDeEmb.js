@@ -9,11 +9,14 @@ var widget_nw_itensComCtrllDeEmb = (function () {
     var URL_BUSCA_DATASET = '/api/public/ecm/dataset/search';
     var DATASET_EMBALAGENS = 'dsNwEmbalagens';
     var ACAO_CONSULTAR_TIPOS_APOIO = 'consultarTiposApoio';
+    var ACAO_APOIAR_ESTABELECIMENTOS = 'apoiarEstabelecimentos';
+    var ACAO_APOIAR_ITENS = 'apoiarItens';
 
     var TODOS = 'todos';
     var MINIMO_CARACTERES_BUSCA = 2;
     var LIMITE_SUGESTOES = 20;
     var ATRASO_CONSULTA_TIPOS_MS = 250;
+    var ATRASO_CONSULTA_APOIO_MS = 350;
     var ATRASO_FECHAR_SUGESTOES_MS = 150;
     var ESPERA_ANIMACAO_INTERRUPTOR_MS = 220;
     var DURACAO_DESTAQUE_LINHA_MS = 2200;
@@ -142,7 +145,9 @@ var widget_nw_itensComCtrllDeEmb = (function () {
         // maior id já usado nos dados mockados (enquanto não há gravação de verdade)
         ultimoId: 0,
 
-        // autocompletes do Fluig do Tipo de Embalagem (filtro e modal)
+        // autocompletes do Fluig: filtros (Estabelecimento, Item, Tipo) e Tipo do modal de cadastro
+        autocompleteEstabelecimentoFiltro: null,
+        autocompleteItemFiltro: null,
         autocompleteTipoFiltro: null,
         autocompleteTipoCadastro: null,
 
@@ -161,8 +166,8 @@ var widget_nw_itensComCtrllDeEmb = (function () {
             this.prepararAutocompletes();
             // Select2 vem do CDN, carregado pelo view.ftl; se o CDN falhar, segue com o select nativo
             if ($.fn.select2) this.prepararSelectSituacao();
-            this.autocompleteTipoFiltro = this.prepararAutocompleteTipo($('[data-filtro-tipo]', this.DOM), 'filtro', TODOS);
-            this.autocompleteTipoCadastro = this.prepararAutocompleteTipo($('[name="tipo"]', this.DOM), 'cadastro', true);
+            this.prepararAutocompletesDosFiltros();
+            this.autocompleteTipoCadastro = this.prepararAutocompleteTipoDoCadastro();
             this.prepararModalCadastro();
             this.prepararModalExcluir();
         },
@@ -380,98 +385,180 @@ var widget_nw_itensComCtrllDeEmb = (function () {
             $select.closest('.nwi-campo-caixa-select').addClass('is-select2');
         },
 
-        // ---------- Autocomplete do Fluig: Tipo de Embalagem (dataset dsNwEmbalagens, ação consultarTiposApoio) ----------
+        // ---------- Autocomplete do Fluig (consulta as ações de apoio do dataset dsNwEmbalagens) ----------
+
+        prepararAutocompletesDosFiltros: function () {
+            var self = this;
+            var $estabelecimento = $('[data-filtro-est]', this.DOM);
+            var $item = $('[data-filtro-item]', this.DOM);
+            var avisouFaltaEstabelecimento = false;
+
+            this.autocompleteEstabelecimentoFiltro = this.prepararAutocompleteApoio($estabelecimento, {
+                identificador: 'estabelecimento-filtro',
+                acao: ACAO_APOIAR_ESTABELECIMENTOS,
+                nomeDoApoio: 'os estabelecimentos',
+                atraso: ATRASO_CONSULTA_APOIO_MS,
+                montarParametros: function (termo) {
+                    return { filtro: termo, limite: LIMITE_SUGESTOES };
+                },
+                // trocar o estabelecimento invalida o item escolhido (o item é consultado dentro dele)
+                aoMudarSelecao: function () {
+                    avisouFaltaEstabelecimento = false;
+                    $item.removeData('codigo').removeData('registro');
+                    if (self.autocompleteItemFiltro) self.autocompleteItemFiltro.val('');
+                }
+            });
+
+            this.autocompleteItemFiltro = this.prepararAutocompleteApoio($item, {
+                identificador: 'item-filtro',
+                acao: ACAO_APOIAR_ITENS,
+                nomeDoApoio: 'os itens',
+                atraso: ATRASO_CONSULTA_APOIO_MS,
+                // o item só pode ser consultado depois de escolher o estabelecimento
+                montarParametros: function (termo) {
+                    var codigoEstabelecimento = $estabelecimento.data('codigo');
+                    if (!codigoEstabelecimento) {
+                        if (!avisouFaltaEstabelecimento) {
+                            self.avisar('Escolha o estabelecimento na lista antes de buscar o item.', 'info');
+                            avisouFaltaEstabelecimento = true;
+                        }
+                        return null;
+                    }
+                    return { codEstabel: codigoEstabelecimento, filtro: termo, limite: LIMITE_SUGESTOES };
+                }
+            });
+
+            this.autocompleteTipoFiltro = this.prepararAutocompleteApoio($('[data-filtro-tipo]', this.DOM), {
+                identificador: 'tipo-filtro',
+                acao: ACAO_CONSULTAR_TIPOS_APOIO,
+                nomeDoApoio: 'os tipos de embalagem',
+                atraso: ATRASO_CONSULTA_TIPOS_MS,
+                montarParametros: function (termo) {
+                    return { filtro: termo, ativo: TODOS, limite: LIMITE_SUGESTOES };
+                }
+            });
+        },
+
+        // no cadastro só aparecem tipos ativos
+        prepararAutocompleteTipoDoCadastro: function () {
+            return this.prepararAutocompleteApoio($('[name="tipo"]', this.DOM), {
+                identificador: 'tipo-cadastro',
+                acao: ACAO_CONSULTAR_TIPOS_APOIO,
+                nomeDoApoio: 'os tipos de embalagem',
+                atraso: ATRASO_CONSULTA_TIPOS_MS,
+                montarParametros: function (termo) {
+                    return { filtro: termo, ativo: true, limite: LIMITE_SUGESTOES };
+                }
+            });
+        },
 
         // A escolha fica no próprio campo: data('codigo') e data('registro') = { codigo, descricao }; digitar depois dela apaga os dois.
-        // situacaoConsultada: 'todos' (filtro) ou true (cadastro: só tipos ativos), como aceita a ação do dataset.
-        prepararAutocompleteTipo: function ($campo, identificador, situacaoConsultada) {
+        // configuracao:
+        //   identificador     nome único do autocomplete dentro do widget
+        //   acao              ação do dataset consultada
+        //   nomeDoApoio       usado nas mensagens de erro ("os itens", "os tipos de embalagem")
+        //   atraso            espera (ms) depois da última tecla antes de chamar o servidor
+        //   montarParametros  recebe o termo digitado e devolve os parâmetros da ação (null = ainda não pode consultar)
+        //   aoMudarSelecao    opcional; chamado quando a escolha é trocada ou apagada
+        prepararAutocompleteApoio: function ($campo, configuracao) {
             var self = this;
-            var buscaTipos = { sequencia: 0, temporizador: null, consulta: null, situacao: situacaoConsultada };
+            var buscaApoio = { sequencia: 0, temporizador: null, consulta: null, configuracao: configuracao };
             var autocomplete;
+
+            function avisarMudancaDeSelecao() {
+                if (configuracao.aoMudarSelecao) configuracao.aoMudarSelecao();
+            }
 
             $campo.on('input', function () {
                 $campo.removeData('codigo').removeData('registro');
-                self.cancelarConsultaTipos(buscaTipos);
+                self.cancelarConsultaApoio(buscaApoio);
+                avisarMudancaDeSelecao();
             });
             $campo.on('fluig.autocomplete.selected fluig.autocomplete.autocompleted', function (evento) {
-                var tipo = evento.item;
-                if (!tipo || typeof tipo.codigo !== 'string' || !tipo.codigo) return;
-                autocomplete.val(tipo.rotulo);
-                $campo.data('codigo', tipo.codigo).data('registro', { codigo: tipo.codigo, descricao: tipo.descricao });
-                self.cancelarConsultaTipos(buscaTipos);
+                var apoio = evento.item;
+                if (!apoio || typeof apoio.codigo !== 'string' || !apoio.codigo) return;
+                avisarMudancaDeSelecao();
+                autocomplete.val(apoio.rotulo);
+                $campo.data('codigo', apoio.codigo).data('registro', { codigo: apoio.codigo, descricao: apoio.descricao });
+                self.cancelarConsultaApoio(buscaApoio);
                 if ($campo.attr('name')) self.marcarErro($campo.attr('name'), '');
             });
 
             autocomplete = FLUIGC.autocomplete($campo, {
                 type: 'autocomplete',
-                name: 'tipos-embalagem-' + identificador + '-' + this.instanceId,
+                name: 'apoio-' + configuracao.identificador + '-' + this.instanceId,
                 minLength: MINIMO_CARACTERES_BUSCA,
                 hint: false,
                 highlight: true,
                 autoLoading: false,
                 displayKey: 'rotulo',
-                templates: { suggestion: '.nwi-tipo-sugestao-' + this.instanceId },
-                source: function (termo, responder) { self.consultarTipos(buscaTipos, termo, responder); }
+                templates: { suggestion: '.nwi-apoio-sugestao-' + this.instanceId },
+                source: function (termo, responder) { self.consultarApoio(buscaApoio, termo, responder); }
             });
             return autocomplete;
         },
 
         // descarta a consulta em andamento (e as respostas que ainda chegarem dela)
-        cancelarConsultaTipos: function (buscaTipos) {
-            buscaTipos.sequencia++;
-            if (buscaTipos.temporizador) clearTimeout(buscaTipos.temporizador);
-            buscaTipos.temporizador = null;
-            if (buscaTipos.consulta && buscaTipos.consulta.abort) buscaTipos.consulta.abort();
-            buscaTipos.consulta = null;
+        cancelarConsultaApoio: function (buscaApoio) {
+            buscaApoio.sequencia++;
+            if (buscaApoio.temporizador) clearTimeout(buscaApoio.temporizador);
+            buscaApoio.temporizador = null;
+            if (buscaApoio.consulta && buscaApoio.consulta.abort) buscaApoio.consulta.abort();
+            buscaApoio.consulta = null;
         },
 
-        consultarTipos: function (buscaTipos, termo, responder) {
+        consultarApoio: function (buscaApoio, termo, responder) {
             var self = this;
+            var configuracao = buscaApoio.configuracao;
             termo = String(termo || '').trim();
-            this.cancelarConsultaTipos(buscaTipos);
-            var sequenciaDestaConsulta = buscaTipos.sequencia;
+            this.cancelarConsultaApoio(buscaApoio);
+            var sequenciaDestaConsulta = buscaApoio.sequencia;
             if (termo.length < MINIMO_CARACTERES_BUSCA) {
                 responder([]);
                 return;
             }
 
+            var parametros = configuracao.montarParametros(termo);
+            if (parametros === null) {
+                responder([]);
+                return;
+            }
+
             function respostaAindaValida() {
-                return sequenciaDestaConsulta === buscaTipos.sequencia;
+                return sequenciaDestaConsulta === buscaApoio.sequencia;
             }
 
             // espera a pessoa parar de digitar antes de chamar o servidor
-            buscaTipos.temporizador = setTimeout(function () {
-                buscaTipos.temporizador = null;
-                var consulta = chamarEmbalagens(ACAO_CONSULTAR_TIPOS_APOIO, {
-                    filtro: termo, ativo: buscaTipos.situacao, limite: LIMITE_SUGESTOES
-                });
-                buscaTipos.consulta = consulta;
+            buscaApoio.temporizador = setTimeout(function () {
+                buscaApoio.temporizador = null;
+                var consulta = chamarEmbalagens(configuracao.acao, parametros);
+                buscaApoio.consulta = consulta;
 
                 consulta.then(function (resultado) {
                     if (!respostaAindaValida()) return;
-                    buscaTipos.consulta = null;
+                    buscaApoio.consulta = null;
                     if (!resultado.sucesso) {
                         responder([]);
-                        self.avisar(MENSAGENS_ERRO[resultado.codigoErro] || resultado.mensagem || 'Não foi possível consultar os tipos de embalagem.', 'danger');
+                        self.avisar(MENSAGENS_ERRO[resultado.codigoErro] || resultado.mensagem || 'Não foi possível consultar ' + configuracao.nomeDoApoio + '.', 'danger');
                         return;
                     }
-                    responder(self.montarSugestoesTipos(resultado.dados));
+                    responder(self.montarSugestoesApoio(resultado.dados));
                 }, function () {
                     if (!respostaAindaValida()) return;
-                    buscaTipos.consulta = null;
+                    buscaApoio.consulta = null;
                     responder([]);
-                    self.avisar('Não foi possível consultar os tipos de embalagem. Tente novamente.', 'danger');
+                    self.avisar('Não foi possível consultar ' + configuracao.nomeDoApoio + '. Tente novamente.', 'danger');
                 });
-            }, ATRASO_CONSULTA_TIPOS_MS);
+            }, configuracao.atraso);
         },
 
-        // aceita só tipos com código e descrição em texto; o rótulo é o que aparece na lista e no campo
-        montarSugestoesTipos: function (tipos) {
-            var tiposValidos = $.grep(tipos || [], function (tipo) {
-                return tipo && typeof tipo.codigo === 'string' && tipo.codigo && typeof tipo.descricao === 'string';
+        // aceita só opções com código e descrição em texto; o rótulo é o que aparece na lista e no campo
+        montarSugestoesApoio: function (opcoes) {
+            var opcoesValidas = $.grep(opcoes || [], function (opcao) {
+                return opcao && typeof opcao.codigo === 'string' && opcao.codigo && typeof opcao.descricao === 'string';
             });
-            return $.map(tiposValidos, function (tipo) {
-                return { codigo: tipo.codigo, descricao: tipo.descricao, rotulo: formatarRotulo(tipo.codigo, tipo.descricao) };
+            return $.map(opcoesValidas, function (opcao) {
+                return { codigo: opcao.codigo, descricao: opcao.descricao, rotulo: formatarRotulo(opcao.codigo, opcao.descricao) };
             });
         },
 

@@ -23,18 +23,16 @@
     <div class="nwi-filtros" role="search" aria-label="Filtros">
         <div class="nwi-campo">
             <label class="nwi-campo-rotulo" for="nwi-filtro-est-${instanceId}">Estabelecimento</label>
-            <div class="nwi-campo-caixa" data-auto="estabelecimentos">
+            <div class="nwi-campo-caixa">
                 <i class="bi bi-search" aria-hidden="true"></i>
-                <input type="text" id="nwi-filtro-est-${instanceId}" class="nwi-campo-input" placeholder="Digite código ou descrição" autocomplete="off" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="nwi-filtro-est-lista-${instanceId}" data-filtro-est>
-                <ul class="nwi-sugestoes" id="nwi-filtro-est-lista-${instanceId}" role="listbox" aria-label="Estabelecimentos encontrados" hidden></ul>
+                <input type="text" id="nwi-filtro-est-${instanceId}" class="nwi-campo-input" placeholder="Digite código ou descrição" maxlength="100" autocomplete="off" data-filtro-est>
             </div>
         </div>
         <div class="nwi-campo">
             <label class="nwi-campo-rotulo" for="nwi-filtro-item-${instanceId}">Item</label>
-            <div class="nwi-campo-caixa" data-auto="itens">
+            <div class="nwi-campo-caixa">
                 <i class="bi bi-search" aria-hidden="true"></i>
-                <input type="text" id="nwi-filtro-item-${instanceId}" class="nwi-campo-input" placeholder="Digite código ou descrição" autocomplete="off" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="nwi-filtro-item-lista-${instanceId}" data-filtro-item>
-                <ul class="nwi-sugestoes" id="nwi-filtro-item-lista-${instanceId}" role="listbox" aria-label="Itens encontrados" hidden></ul>
+                <input type="text" id="nwi-filtro-item-${instanceId}" class="nwi-campo-input" placeholder="Digite código ou descrição" maxlength="100" autocomplete="off" data-filtro-item>
             </div>
         </div>
         <div class="nwi-campo">
@@ -59,7 +57,7 @@
         </div>
     </div>
     <div class="nwi-tabela" data-tabela></div>
-    <script type="text/template" class="nwi-tipo-sugestao-${instanceId}"><span>{{rotulo}}</span></script>
+    <script type="text/template" class="nwi-apoio-sugestao-${instanceId}"><span>{{rotulo}}</span></script>
 
     <dialog class="nwi-modal" aria-labelledby="nwi-modal-titulo-${instanceId}" data-modal-cadastro>
         <form class="nwi-modal-form" novalidate>

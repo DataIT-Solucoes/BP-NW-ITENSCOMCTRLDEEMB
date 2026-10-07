@@ -266,14 +266,12 @@ var widget_nw_itensComCtrllDeEmb = SuperWidget.extend({
         if (window.Tabulator) return Promise.resolve();
         if (!nwiTabulatorPromise) {
             nwiTabulatorPromise = new Promise(function (resolve, reject) {
-                var script = document.createElement('script');
-                script.src = NWI_TABULATOR_JS;
-                script.onload = resolve;
-                script.onerror = function () {
+                $.ajax({ url: NWI_TABULATOR_JS, dataType: 'script', cache: true }).done(function () {
+                    resolve();
+                }).fail(function () {
                     nwiTabulatorPromise = null;
                     reject();
-                };
-                document.head.appendChild(script);
+                });
             });
         }
         return nwiTabulatorPromise;
@@ -319,10 +317,7 @@ var widget_nw_itensComCtrllDeEmb = SuperWidget.extend({
                 {
                     title: 'Unidade', field: 'unidade', sorter: 'string', width: 135, vertAlign: 'middle',
                     formatter: function (cell) {
-                        var span = document.createElement('span');
-                        span.className = 'nwi-sigla';
-                        span.textContent = cell.getValue();
-                        return span;
+                        return $('<span>', { 'class': 'nwi-sigla', text: cell.getValue() })[0];
                     }
                 },
                 {
@@ -332,25 +327,30 @@ var widget_nw_itensComCtrllDeEmb = SuperWidget.extend({
                 {
                     title: 'Capacidade', field: 'capacidade', sorter: 'number', width: 140, hozAlign: 'right', vertAlign: 'middle',
                     formatter: function (cell) {
-                        var span = document.createElement('span');
-                        span.className = 'nwi-capacidade';
-                        span.textContent = self.formatarCapacidade(cell.getValue());
-                        return span;
+                        return $('<span>', { 'class': 'nwi-capacidade', text: self.formatarCapacidade(cell.getValue()) })[0];
                     }
                 },
                 {
-                    title: 'Situação', field: 'ativo', sorter: 'boolean', width: 140, vertAlign: 'middle',
-                    formatter: function (cell) { return self.montarSwitch(cell.getRow()); }
+                    title: 'Situação', field: 'ativo', sorter: 'boolean', width: 130, hozAlign: 'left', vertAlign: 'middle',
+                    formatter: function (cell) {
+                        var ativo = cell.getValue();
+                        return $('<span>', {
+                            'class': 'nwi-situacao ' + (ativo ? 'is-ativo' : 'is-inativo'),
+                            text: ativo ? 'Ativo' : 'Inativo'
+                        })[0];
+                    }
                 },
                 {
                     //sem ordenação de verdade: a seta do cabeçalho é só visual (CSS .nwi-col-acoes)
-                    title: 'Ações', headerSort: false, cssClass: 'nwi-col-acoes', width: 120, hozAlign: 'right', vertAlign: 'middle',
+                    title: 'Ações', headerSort: false, cssClass: 'nwi-col-acoes', width: 200, hozAlign: 'right', vertAlign: 'middle',
                     formatter: function (cell) { return self.montarBotoesAcoes(cell.getRow().getData()); },
                     cellClick: function (event, cell) {
-                        var botao = event.target.closest('[data-acao]');
-                        if (!botao) return;
-                        if (botao.getAttribute('data-acao') === 'editar') self.abrirModalEditar(cell.getRow());
-                        else self.abrirModalExcluir(cell.getRow());
+                        var $botao = $(event.target).closest('[data-acao]');
+                        if (!$botao.length || $botao.prop('disabled')) return;
+                        var acao = $botao.attr('data-acao');
+                        if (acao === 'editar') self.abrirModalEditar(cell.getRow());
+                        else if (acao === 'situacao') self.alterarSituacao(cell.getRow(), $botao);
+                        else if (acao === 'excluir') self.abrirModalExcluir(cell.getRow());
                     }
                 }
             ]
@@ -358,16 +358,9 @@ var widget_nw_itensComCtrllDeEmb = SuperWidget.extend({
     },
 
     celulaCodigoDescricao(codigo, descricao) {
-        var span = document.createElement('span');
-        var forte = document.createElement('span');
-        forte.className = 'nwi-codigo';
-        forte.textContent = codigo;
-        var resto = document.createElement('span');
-        resto.className = 'nwi-descricao';
-        resto.textContent = ' — ' + descricao;
-        span.appendChild(forte);
-        span.appendChild(resto);
-        return span;
+        return $('<span>')
+            .append($('<span>', { 'class': 'nwi-codigo', text: codigo }))
+            .append($('<span>', { 'class': 'nwi-descricao', text: ' — ' + descricao }))[0];
     },
 
     //4 casas decimais e vírgula, como no Progress
@@ -376,73 +369,42 @@ var widget_nw_itensComCtrllDeEmb = SuperWidget.extend({
     },
 
     //MOCK: a troca de situação só altera a linha da tela. Trocar pelo PATCH quando o serviço existir.
-    montarSwitch(linha) {
-        var self = this;
-        var dados = linha.getData();
-        var pendente = null;
-        var label = document.createElement('label');
-        label.className = 'nwi-switch';
-
-        var input = document.createElement('input');
-        input.type = 'checkbox';
-        input.checked = !!dados.ativo;
-        input.setAttribute('aria-label', 'Situação de ' + dados.itemCodigo + ' em ' + dados.estCodigo);
-
-        var trilho = document.createElement('span');
-        trilho.className = 'nwi-switch-trilho';
-
-        var texto = document.createElement('span');
-        texto.className = 'nwi-switch-texto';
-        texto.textContent = dados.ativo ? 'Ativo' : 'Inativo';
-
-        input.addEventListener('change', function () {
-            self.trocarTextoSwitch(texto, input.checked ? 'Ativo' : 'Inativo');
-            //o update redesenha a célula e trocaria o switch por um novo no meio do caminho:
-            //esperar o fim da animação deixa o botão deslizar até o outro lado antes disso.
-            clearTimeout(pendente);
-            pendente = setTimeout(function () {
-                linha.update({ ativo: input.checked });
-            }, self.DURACAO_SWITCH);
+    alterarSituacao(linha, $interruptor) {
+        var ativo = !linha.getData().ativo;
+        //o update redesenha a célula: esperar a bolinha chegar ao outro lado antes disso
+        $interruptor.prop('disabled', true).attr({
+            'aria-checked': ativo ? 'true' : 'false',
+            title: ativo ? 'Desativar' : 'Ativar'
         });
-        //o clique no switch não deve selecionar/ordenar nada atrás dele
-        label.addEventListener('click', function (event) { event.stopPropagation(); });
-
-        label.appendChild(input);
-        label.appendChild(trilho);
-        label.appendChild(texto);
-        return label;
-    },
-
-    //tempo da animação do switch no CSS (.nwi-switch-trilho), mais uma folga
-    DURACAO_SWITCH: 300,
-
-    //Ativo <-> Inativo com um fade curto no lugar da troca seca de palavra
-    trocarTextoSwitch(el, novo) {
-        if (el.textContent === novo) return;
-        el.classList.add('is-trocando');
-        setTimeout(function () {
-            el.textContent = novo;
-            el.classList.remove('is-trocando');
-        }, 130);
+        setTimeout(function () { linha.update({ ativo: ativo }); }, 220);
     },
 
     montarBotoesAcoes(dados) {
-        var grupo = document.createElement('div');
-        grupo.className = 'nwi-acoes';
-        [
+        var rotulo = dados.itemCodigo + ' em ' + dados.estCodigo;
+        var $grupo = $('<div>', { 'class': 'nwi-acoes', role: 'group', 'aria-label': 'Ações para ' + rotulo });
+        $('<button>', {
+            type: 'button',
+            'class': 'nwi-interruptor',
+            'data-acao': 'situacao',
+            role: 'switch',
+            'aria-checked': dados.ativo ? 'true' : 'false',
+            'aria-label': 'Ativo: ' + rotulo,
+            title: dados.ativo ? 'Desativar' : 'Ativar'
+        }).append($('<span>', { 'class': 'nwi-interruptor-bolinha', 'aria-hidden': 'true' })).appendTo($grupo);
+        $('<span>', { 'class': 'nwi-acoes-divisor', 'aria-hidden': 'true' }).appendTo($grupo);
+        $.each([
             { acao: 'editar', icone: 'bi-pencil', texto: 'Editar' },
             { acao: 'excluir', icone: 'bi-trash3', texto: 'Excluir' }
-        ].forEach(function (b) {
-            var botao = document.createElement('button');
-            botao.type = 'button';
-            botao.className = 'nwi-acao nwi-acao-' + b.acao;
-            botao.setAttribute('data-acao', b.acao);
-            botao.setAttribute('aria-label', b.texto + ' ' + dados.itemCodigo + ' em ' + dados.estCodigo);
-            botao.title = b.texto;
-            botao.innerHTML = '<i class="bi ' + b.icone + '" aria-hidden="true"></i>';
-            grupo.appendChild(botao);
+        ], function (i, b) {
+            $('<button>', {
+                type: 'button',
+                'class': 'nwi-acao nwi-acao-' + b.acao,
+                'data-acao': b.acao,
+                'aria-label': b.texto + ' ' + rotulo,
+                title: b.texto
+            }).append($('<i>', { 'class': 'bi ' + b.icone, 'aria-hidden': 'true' })).appendTo($grupo);
         });
-        return grupo;
+        return $grupo[0];
     },
 
     // ---------- Filtros ----------
@@ -685,11 +647,11 @@ var widget_nw_itensComCtrllDeEmb = SuperWidget.extend({
         var visivel = this.tabela.getRows('active').indexOf(linha) !== -1;
         if (!visivel) return;
         linha.pageTo().then(function () {
-            var el = linha.getElement();
-            el.classList.remove('nwi-linha-nova');
-            void el.offsetWidth;
-            el.classList.add('nwi-linha-nova');
-            setTimeout(function () { el.classList.remove('nwi-linha-nova'); }, 2200);
+            var $el = $(linha.getElement());
+            $el.removeClass('nwi-linha-nova');
+            void $el[0].offsetWidth; //reinicia a animação se a linha já estava piscando
+            $el.addClass('nwi-linha-nova');
+            setTimeout(function () { $el.removeClass('nwi-linha-nova'); }, 2200);
         });
     },
 

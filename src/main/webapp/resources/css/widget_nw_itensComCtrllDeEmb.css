@@ -561,85 +561,81 @@
     color: var(--nwi-tinta-suave);
 }
 
-/* ---------- Switch de situação (na linha da tabela) ---------- */
-.fluig-style-guide.nwi .nwi-switch {
+/* ---------- Situação (selo na coluna) ---------- */
+.fluig-style-guide.nwi .nwi-situacao {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.fluig-style-guide.nwi .nwi-situacao.is-ativo {
+    background-color: var(--nwi-nevoa);
+    color: var(--nwi-verde);
+}
+
+.fluig-style-guide.nwi .nwi-situacao.is-inativo {
+    border: 1px solid rgba(237, 28, 36, 0.25);
+    background-color: rgba(237, 28, 36, 0.08);
+    color: var(--nwi-vermelho-escuro);
+}
+
+/* ---------- Interruptor (coluna Ações) ---------- */
+.fluig-style-guide.nwi .nwi-interruptor {
+    appearance: none;
     position: relative;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
+    flex: 0 0 auto;
+    box-sizing: border-box;
+    width: 40px;
+    height: 24px;
     margin: 0;
-    font-weight: 400;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background-color: var(--nwi-borda-campo);
     cursor: pointer;
+    transition: background-color 0.2s ease;
 }
 
-.fluig-style-guide.nwi .nwi-switch input {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    opacity: 0;
-}
-
-.fluig-style-guide.nwi .nwi-switch-trilho {
-    position: relative;
-    width: 38px;
-    height: 21px;
-    border-radius: 11px;
-    background-color: #9C9A90;
-    transition: background-color 0.26s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* o botão desliza com uma leve folga no fim do curso (sensação de encaixe) */
-.fluig-style-guide.nwi .nwi-switch-trilho::after {
-    content: "";
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 17px;
-    height: 17px;
-    border-radius: 50%;
-    background-color: #fff;
-    box-shadow: 0 1px 3px rgba(32, 32, 30, 0.3);
-    transition: transform 0.26s cubic-bezier(0.34, 1.35, 0.64, 1), width 0.26s ease, box-shadow 0.26s ease;
-}
-
-/* enquanto o dedo/mouse está pressionado, o botão estica um pouco */
-.fluig-style-guide.nwi .nwi-switch:active .nwi-switch-trilho::after {
-    width: 21px;
-}
-
-.fluig-style-guide.nwi .nwi-switch input:checked + .nwi-switch-trilho {
+.fluig-style-guide.nwi .nwi-interruptor[aria-checked="true"] {
     background-color: var(--nwi-verde);
 }
 
-.fluig-style-guide.nwi .nwi-switch input:checked + .nwi-switch-trilho::after {
-    transform: translateX(17px);
+.fluig-style-guide.nwi .nwi-interruptor-bolinha {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background-color: #fff;
+    box-shadow: 0 1px 3px rgba(32, 32, 30, 0.2);
+    transition: transform 0.2s ease;
 }
 
-/* esticado e à direita: anda menos para não passar da borda do trilho */
-.fluig-style-guide.nwi .nwi-switch:active input:checked + .nwi-switch-trilho::after {
-    transform: translateX(13px);
+.fluig-style-guide.nwi .nwi-interruptor[aria-checked="true"] .nwi-interruptor-bolinha {
+    transform: translateX(16px);
 }
 
-.fluig-style-guide.nwi .nwi-switch input:focus-visible + .nwi-switch-trilho {
+.fluig-style-guide.nwi .nwi-interruptor:focus-visible {
+    outline: none;
     box-shadow: 0 0 0 3px rgba(0, 107, 53, 0.28);
-}
-
-/* o rótulo troca com um fade curto, em vez de piscar de uma palavra para a outra */
-.fluig-style-guide.nwi .nwi-switch-texto {
-    min-width: 46px;
-    font-size: 13px;
-    color: var(--nwi-tinta-suave);
-    transition: opacity 0.13s ease;
-}
-
-.fluig-style-guide.nwi .nwi-switch-texto.is-trocando {
-    opacity: 0;
 }
 
 /* ---------- Coluna Ações ---------- */
 .fluig-style-guide.nwi .nwi-acoes {
     display: inline-flex;
-    gap: 6px;
+    align-items: center;
+    gap: 8px;
+}
+
+.fluig-style-guide.nwi .nwi-acoes-divisor {
+    flex: 0 0 auto;
+    width: 1px;
+    height: 20px;
+    margin: 0 4px;
+    background-color: var(--nwi-linha);
 }
 
 .fluig-style-guide.nwi .nwi-acao {
@@ -949,9 +945,8 @@
     .fluig-style-guide.nwi .nwi-btn,
     .fluig-style-guide.nwi .nwi-modal-fechar,
     .fluig-style-guide.nwi .nwi-acao,
-    .fluig-style-guide.nwi .nwi-switch-trilho,
-    .fluig-style-guide.nwi .nwi-switch-trilho::after,
-    .fluig-style-guide.nwi .nwi-switch-texto {
+    .fluig-style-guide.nwi .nwi-interruptor,
+    .fluig-style-guide.nwi .nwi-interruptor-bolinha {
         transition: none;
     }
 

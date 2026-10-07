@@ -180,6 +180,7 @@
     top: 22px;
     left: 14px;
     transform: translateY(-50%);
+    z-index: 2;
     font-size: 15px;
     color: var(--nwi-tinta-suave);
     pointer-events: none;
@@ -267,7 +268,50 @@
     pointer-events: none;
 }
 
-/* ---------- Autocomplete ---------- */
+/* ---------- Autocomplete Fluig (Tipo de Embalagem) ---------- */
+/* O typeahead embrulha o input num <span> e pode aplicar fundo próprio: o branco e a largura do campo são reafirmados. */
+.fluig-style-guide.nwi .nwi-campo-caixa .fluig-typeahead,
+.fluig-style-guide.nwi .nwi-campo-caixa .twitter-typeahead {
+    width: 100%;
+    border-radius: 10px;
+    background-color: #fff;
+}
+
+.fluig-style-guide.nwi .nwi-campo-caixa .tt-input:not([readonly]) {
+    background-color: #fff !important;
+}
+
+.fluig-style-guide.nwi .nwi-campo-caixa .tt-menu,
+.fluig-style-guide.nwi .nwi-campo-caixa .tt-dropdown-menu {
+    z-index: 30;
+    box-sizing: border-box;
+    width: 100%;
+    margin-top: 4px;
+    padding: 6px;
+    border: 1px solid var(--nwi-linha);
+    border-radius: 12px;
+    background-color: #fff;
+    box-shadow: 0 12px 32px rgba(32, 32, 30, 0.16);
+}
+
+.fluig-style-guide.nwi .nwi-campo-caixa .tt-suggestion {
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.35;
+    color: var(--nwi-tinta);
+    cursor: pointer;
+    white-space: normal;
+}
+
+.fluig-style-guide.nwi .nwi-campo-caixa .tt-suggestion:hover,
+.fluig-style-guide.nwi .nwi-campo-caixa .tt-suggestion.tt-cursor {
+    background-color: var(--nwi-nevoa);
+    color: var(--nwi-tinta);
+}
+
+/* ---------- Autocomplete próprio (Estabelecimento e Item) ---------- */
 .fluig-style-guide.nwi .nwi-sugestoes {
     position: absolute;
     z-index: 30;

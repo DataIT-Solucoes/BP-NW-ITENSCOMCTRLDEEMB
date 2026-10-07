@@ -36,10 +36,9 @@
         </div>
         <div class="nwi-campo">
             <label class="nwi-campo-rotulo" for="nwi-filtro-tipo-${instanceId}">Tipo de Embalagem</label>
-            <div class="nwi-campo-caixa" data-auto="tipos">
+            <div class="nwi-campo-caixa">
                 <i class="bi bi-search" aria-hidden="true"></i>
-                <input type="text" id="nwi-filtro-tipo-${instanceId}" class="nwi-campo-input" placeholder="Digite código ou descrição" autocomplete="off" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="nwi-filtro-tipo-lista-${instanceId}" data-filtro-tipo>
-                <ul class="nwi-sugestoes" id="nwi-filtro-tipo-lista-${instanceId}" role="listbox" aria-label="Tipos de embalagem encontrados" hidden></ul>
+                <input type="text" id="nwi-filtro-tipo-${instanceId}" class="nwi-campo-input" placeholder="Digite código ou descrição" maxlength="100" autocomplete="off" data-filtro-tipo>
             </div>
         </div>
         <div class="nwi-campo">
@@ -57,6 +56,7 @@
         </div>
     </div>
     <div class="nwi-tabela" data-tabela></div>
+    <script type="text/template" class="nwi-tipo-sugestao-${instanceId}"><span>{{rotulo}}</span></script>
 
     <dialog class="nwi-modal" aria-labelledby="nwi-modal-titulo-${instanceId}" data-modal-cadastro>
         <form class="nwi-modal-form" novalidate>
@@ -92,9 +92,8 @@
                     </div>
                     <div class="nwi-campo">
                         <label class="nwi-campo-rotulo" for="nwi-form-tipo-${instanceId}">Tipo de Embalagem</label>
-                        <div class="nwi-campo-caixa" data-auto="tipos">
-                            <input type="text" id="nwi-form-tipo-${instanceId}" name="tipo" class="nwi-campo-input nwi-campo-input-simples" placeholder="Digite código ou descrição" autocomplete="off" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="nwi-form-tipo-lista-${instanceId}" aria-describedby="nwi-form-tipo-erro-${instanceId}" required>
-                            <ul class="nwi-sugestoes" id="nwi-form-tipo-lista-${instanceId}" role="listbox" aria-label="Tipos de embalagem encontrados" hidden></ul>
+                        <div class="nwi-campo-caixa">
+                            <input type="text" id="nwi-form-tipo-${instanceId}" name="tipo" class="nwi-campo-input nwi-campo-input-simples" placeholder="Digite código ou descrição" maxlength="100" autocomplete="off" aria-describedby="nwi-form-tipo-erro-${instanceId}" required>
                         </div>
                         <p class="nwi-campo-erro" id="nwi-form-tipo-erro-${instanceId}" data-erro="tipo"></p>
                     </div>

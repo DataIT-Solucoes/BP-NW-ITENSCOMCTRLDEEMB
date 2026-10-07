@@ -3,7 +3,7 @@ var NWI_TABULATOR_JS = 'https://cdnjs.cloudflare.com/ajax/libs/tabulator/6.4.0/j
 var nwiTabulatorPromise = null;
 
 // DADOS MOCKADOS, só para visualizar a tela. Trocar pelos datasets/REST quando forem definidos.
-// Listas de apoio (estabelecimento, item e tipo de embalagem) usadas pelos autocompletes.
+// Listas de apoio (estabelecimento e item) usadas pelos autocompletes. O tipo de embalagem vem do dataset (FLUIGC.autocomplete).
 var NWI_FONTES = {
     estabelecimentos: [
         { codigo: '10901', descricao: 'Fazenda 10901' },
@@ -14,13 +14,46 @@ var NWI_FONTES = {
         { codigo: '365131', descricao: 'DIMEXION - ONU 3018', unidade: 'LT' },
         { codigo: '361378', descricao: 'OMITE 720 CE BR - ONU 3082', unidade: 'LT' },
         { codigo: '357867', descricao: 'REGLONE', unidade: 'LT' }
-    ],
-    tipos: [
-        { codigo: 'PL', descricao: 'PLÁSTICA' },
-        { codigo: 'MT', descricao: 'METÁLICA' },
-        { codigo: 'RF', descricao: 'REFORÇADA' }
     ]
 };
+
+var NWI_LIMITE_SUGESTOES_TIPOS = 20;
+
+var NWI_MENSAGENS_ERRO = {
+    AUTORIZACAO_NAO_CONFIGURADA: 'O acesso a esta tela ainda não foi configurado no Fluig (grupos e permissões).',
+    SEM_PERMISSAO: 'Você não tem permissão para esta ação.'
+};
+
+//chama uma ação do dataset dsNwEmbalagens (rota /api/public/ecm/dataset/search) e devolve o envelope da resposta
+function nwiChamarEmbalagens(acao, parametros) {
+    var xhr = $.ajax({
+        url: '/api/public/ecm/dataset/search',
+        type: 'POST',
+        contentType: 'application/json',
+        dataType: 'json',
+        data: JSON.stringify({
+            datasetId: 'dsNwEmbalagens',
+            filterFields: ['acao', acao, 'parametros', JSON.stringify(parametros)],
+            resultFields: [], limit: '1', orderBy: ''
+        })
+    });
+    var resultado = xhr.then(function (transporte) {
+        if (!transporte || !Array.isArray(transporte.content) || transporte.content.length !== 1) {
+            throw new Error('Dataset fora do contrato de uma linha de envelope.');
+        }
+        var linha = transporte.content[0];
+        if (linha.acao && linha.acao !== acao) throw new Error('Ação da resposta divergente.');
+        var envelope;
+        try { envelope = JSON.parse(linha.resultadoJson); }
+        catch (erro) { throw new Error('Envelope JSON do Dataset inválido.'); }
+        if (!envelope || typeof envelope.sucesso !== 'boolean') throw new Error('Resultado funcional do Dataset inválido.');
+        return envelope;
+    }, function (jqXHR, textStatus) {
+        throw new Error(textStatus === 'abort' ? 'Chamada cancelada.' : 'Falha HTTP ' + jqXHR.status + ' no transporte Fluig.');
+    });
+    resultado.abort = function () { xhr.abort(); };
+    return resultado;
+}
 
 var NWI_DADOS_MOCK = [
     {
@@ -56,6 +89,10 @@ var widget_nw_itensComCtrllDeEmb = SuperWidget.extend({
     //maior id já usado nos dados mockados (enquanto não há gravação de verdade)
     ultimoId: 0,
 
+    //autocompletes do Fluig do Tipo de Embalagem (filtro e modal)
+    acTipoFiltro: null,
+    acTipoForm: null,
+
     //método iniciado quando a widget é carregada
     init() {
         var self = this;
@@ -77,6 +114,8 @@ var widget_nw_itensComCtrllDeEmb = SuperWidget.extend({
         });
 
         this.prepararAutocompletes();
+        this.acTipoFiltro = this.prepararAutocompleteTipo($('[data-filtro-tipo]', this.DOM), 'filtro', 'todos');
+        this.acTipoForm = this.prepararAutocompleteTipo($('[name="tipo"]', this.DOM), 'form', true);
         this.prepararModalCadastro();
         this.prepararModalExcluir();
     },
@@ -258,6 +297,98 @@ var widget_nw_itensComCtrllDeEmb = SuperWidget.extend({
 
     preencherUnidade(unidade) {
         $('[name="unidade"]', this.DOM).val(unidade);
+    },
+
+    // ---------- Autocomplete do Fluig: Tipo de Embalagem (dataset dsNwEmbalagens, ação consultarTiposApoio) ----------
+
+    //a escolha fica no próprio input: data('codigo') e data('registro') = { codigo, descricao }; digitar depois dela apaga os dois
+    //ativo: 'todos' (filtro) ou true (cadastro: só tipos ativos), como aceita a ação do dataset
+    prepararAutocompleteTipo($input, sufixo, ativo) {
+        var self = this;
+        var estado = { seq: 0, timer: null, consulta: null, ativo: ativo };
+        var ac;
+
+        $input.on('input', function () {
+            $input.removeData('codigo').removeData('registro');
+            self.cancelarSugestoesTipos(estado);
+        });
+        $input.on('fluig.autocomplete.selected fluig.autocomplete.autocompleted', function (event) {
+            var item = event.item;
+            if (!item || typeof item.codigo !== 'string' || !item.codigo) return;
+            ac.val(item.rotulo);
+            $input.data('codigo', item.codigo).data('registro', { codigo: item.codigo, descricao: item.descricao });
+            self.cancelarSugestoesTipos(estado);
+            if ($input.attr('name')) self.marcarErro($input.attr('name'), '');
+        });
+
+        ac = FLUIGC.autocomplete($input, {
+            type: 'autocomplete',
+            name: 'nwi-tipos-' + sufixo + '-' + this.instanceId,
+            minLength: 2,
+            hint: false,
+            highlight: true,
+            autoLoading: false,
+            displayKey: 'rotulo',
+            templates: { suggestion: '.nwi-tipo-sugestao-' + this.instanceId },
+            source: function (termo, responder) { self.consultarSugestoesTipos(estado, termo, responder); }
+        });
+        return ac;
+    },
+
+    cancelarSugestoesTipos(estado) {
+        estado.seq++;
+        if (estado.timer) clearTimeout(estado.timer);
+        estado.timer = null;
+        if (estado.consulta && estado.consulta.abort) estado.consulta.abort();
+        estado.consulta = null;
+    },
+
+    consultarSugestoesTipos(estado, termo, responder) {
+        var self = this;
+        termo = String(termo || '').trim();
+        this.cancelarSugestoesTipos(estado);
+        var seq = estado.seq;
+        if (termo.length < 2) {
+            responder([]);
+            return;
+        }
+        //espera a pessoa parar de digitar antes de chamar o servidor
+        estado.timer = setTimeout(function () {
+            estado.timer = null;
+            var consulta = nwiChamarEmbalagens('consultarTiposApoio', { filtro: termo, ativo: estado.ativo, limite: NWI_LIMITE_SUGESTOES_TIPOS });
+            estado.consulta = consulta;
+            consulta.then(function (resultado) {
+                if (seq !== estado.seq) return;
+                estado.consulta = null;
+                if (!resultado.sucesso) {
+                    responder([]);
+                    self.avisar(NWI_MENSAGENS_ERRO[resultado.codigoErro] || resultado.mensagem || 'Não foi possível consultar os tipos de embalagem.', 'danger');
+                    return;
+                }
+                var itens = $.grep(resultado.dados || [], function (item) {
+                    return item && typeof item.codigo === 'string' && item.codigo && typeof item.descricao === 'string';
+                });
+                responder($.map(itens, function (item) {
+                    return { codigo: item.codigo, descricao: item.descricao, rotulo: item.codigo + ' — ' + item.descricao };
+                }));
+            }, function () {
+                if (seq !== estado.seq) return;
+                estado.consulta = null;
+                responder([]);
+                self.avisar('Não foi possível consultar os tipos de embalagem. Tente novamente.', 'danger');
+            });
+        }, 250);
+    },
+
+    avisar(mensagem, tipo) {
+        if (window.FLUIGC && FLUIGC.toast) FLUIGC.toast({ title: '', message: mensagem, type: tipo });
+    },
+
+    //preenche o campo Tipo do modal como se a pessoa tivesse escolhido da lista (edição)
+    definirTipoForm(codigo, descricao) {
+        var $input = this.$form.find('[name="tipo"]');
+        this.acTipoForm.val(codigo + ' — ' + descricao);
+        $input.data('codigo', codigo).data('registro', { codigo: codigo, descricao: descricao });
     },
 
     // ---------- Tabela ----------
@@ -501,7 +632,7 @@ var widget_nw_itensComCtrllDeEmb = SuperWidget.extend({
             this.$form.find('[name="estabelecimento"]').val(d.estCodigo + ' — ' + d.estDescricao).data('codigo', d.estCodigo);
             this.$form.find('[name="item"]').val(d.itemCodigo + ' — ' + d.itemDescricao).data('codigo', d.itemCodigo);
             this.$form.find('[name="unidade"]').val(d.unidade);
-            this.$form.find('[name="tipo"]').val(d.tipoCodigo + ' — ' + d.tipoDescricao).data('codigo', d.tipoCodigo);
+            this.definirTipoForm(d.tipoCodigo, d.tipoDescricao);
             this.$form.find('[name="capacidade"]').val(d.capacidade);
         }
         modal.showModal();
@@ -518,7 +649,8 @@ var widget_nw_itensComCtrllDeEmb = SuperWidget.extend({
         var self = this;
         this.linhaEditando = null;
         this.$form[0].reset();
-        this.$form.find('.nwi-campo-input').removeData('codigo');
+        this.$form.find('.nwi-campo-input').removeData('codigo').removeData('registro');
+        if (this.acTipoForm) this.acTipoForm.val('');
         this.$form.find('.nwi-sugestoes').prop('hidden', true).empty();
         ['estabelecimento', 'item', 'tipo', 'capacidade'].forEach(function (campo) { self.marcarErro(campo, ''); });
     },
@@ -542,7 +674,7 @@ var widget_nw_itensComCtrllDeEmb = SuperWidget.extend({
         var self = this;
         var estabelecimento = this.selecionado('estabelecimento', 'estabelecimentos');
         var item = this.selecionado('item', 'itens');
-        var tipo = this.selecionado('tipo', 'tipos');
+        var tipo = this.$form.find('[name="tipo"]').data('registro') || null;
         var capacidade = parseFloat(String(this.$form.find('[name="capacidade"]').val()).replace(',', '.'));
         var primeiroInvalido = null;
 

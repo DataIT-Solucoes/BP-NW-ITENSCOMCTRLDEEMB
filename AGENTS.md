@@ -17,11 +17,13 @@ Base funcional: aba "Itens Controlados" do protótipo `https://humcode.com.br/mo
 - Context-root: `/widget_nw_itensComCtrllDeEmb`
 - Onde é usado (página/comunidade do Fluig): a definir
 
-## Estado atual (2026-10-02)
-Tela montada com **dados mockados**; nenhuma chamada a dataset ou REST.
+## Estado atual (2026-10-07)
+A tabela é carregada ao abrir a tela pelo dataset `dsNwEmbalagens` (ação `consultarParametros`, com bolinha de carregamento).
+Os filtros Estabelecimento, Item e Tipo de Embalagem são autocomplete do Fluig (`apoiarEstabelecimentos`, `apoiarItens`, `consultarTiposApoio`).
+Ainda são mock: Estabelecimento e Item do modal (`OPCOES_APOIO_MOCK`) e as gravações (cadastro, edição, exclusão, switch), que só alteram a tabela da tela.
 - `view.ftl`: cabeçalho + aba única "Itens Controlados" + filtros + tabela + 2 `<dialog>` (cadastro e exclusão).
 - `widget_nw_itensComCtrllDeEmb.js`: SuperWidget com Tabulator 6.4.0 (CDN), autocompletes próprios,
-  filtros, cadastro/edição, exclusão e switch de situação — tudo sobre `ITENS_CONTROLADOS_MOCK` / `OPCOES_APOIO_MOCK`.
+  filtros, cadastro/edição, exclusão e switch de situação.
 - `widget_nw_itensComCtrllDeEmb.css`: paleta Branco Peres sob `.fluig-style-guide.nwi`.
 - `edit.ftl`: card de identificação.
 
@@ -55,12 +57,14 @@ Recursos externos carregados pelo `view.ftl` (CDN): Bootstrap Icons 1.11.3, font
 Tabulator 6.4.0 (CSS no `view.ftl`, JS injetado pelo script).
 
 ## Dados
-- Datasets: a definir
+- Dataset: `dsNwEmbalagens` (fonte em `widget_nw_embalagens/datasets/`); a liberação por grupo/estabelecimento fica em `NW_CONFIG.regras` desse arquivo.
+  Ações usadas: `consultarParametros`, `apoiarEstabelecimentos`, `apoiarItens`, `consultarTiposApoio`.
 - Serviços REST: a definir. Contratos citados no mapa técnico do protótipo (ainda não implementados):
   `consultarEstabelecimentos` · GET /apoios/estabelecimentos; `consultarItens` · GET /apoios/itens;
   `consultarParametros` · GET /parametros; `salvarParametro` · POST/PATCH /parametros.
 - Campos do registro no JS: `id`, `estCodigo`, `estDescricao`, `itemCodigo`, `itemDescricao`,
-  `unidade`, `tipoCodigo`, `tipoDescricao`, `capacidade`, `ativo`.
+  `unidade`, `tipoCodigo`, `tipoDescricao`, `capacidade`, `ativo`, `versao`.
+  O `consultarParametros` devolve só códigos: as descrições (`estDescricao`, `itemDescricao`, `tipoDescricao`) vêm vazias e as colunas mostram só o código.
 
 ## Parâmetros de configuração (`edit.ftl`)
 Nenhum.
@@ -72,7 +76,8 @@ Nenhum.
 - Conversão de unidade: pertence ao salvamento (regra ainda não especificada).
 
 ## Pendências / decisões em aberto
-- Trocar os mocks (`ITENS_CONTROLADOS_MOCK`, `OPCOES_APOIO_MOCK`) pelos datasets/serviços REST quando existirem.
+- Trocar o que ainda é mock (`OPCOES_APOIO_MOCK` do modal e as gravações) pelos datasets/serviços REST quando existirem.
+- Definir de onde vêm as descrições de estabelecimento, item e tipo na tabela (o `consultarParametros` só traz códigos).
 - Definir se a troca do switch de situação grava na hora (PATCH) ou só no salvar.
 - Regra de conversão de unidade no salvamento.
 - Quebras de linha: os arquivos deste widget estão em **LF** (como a extensão gerou);

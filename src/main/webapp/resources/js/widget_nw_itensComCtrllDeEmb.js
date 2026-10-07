@@ -11,10 +11,12 @@ var widget_nw_itensComCtrllDeEmb = (function () {
     var ACAO_CONSULTAR_TIPOS_APOIO = 'consultarTiposApoio';
     var ACAO_APOIAR_ESTABELECIMENTOS = 'apoiarEstabelecimentos';
     var ACAO_APOIAR_ITENS = 'apoiarItens';
+    var ACAO_CONSULTAR_PARAMETROS = 'consultarParametros';
 
     var TODOS = 'todos';
     var MINIMO_CARACTERES_BUSCA = 2;
     var LIMITE_SUGESTOES = 20;
+    var LIMITE_PAGINA_PARAMETROS = 100;
     var ATRASO_CONSULTA_TIPOS_MS = 250;
     var ATRASO_CONSULTA_APOIO_MS = 350;
     var ATRASO_FECHAR_SUGESTOES_MS = 150;
@@ -40,25 +42,6 @@ var widget_nw_itensComCtrllDeEmb = (function () {
             { codigo: '357867', descricao: 'REGLONE', unidade: 'LT' }
         ]
     };
-
-    var ITENS_CONTROLADOS_MOCK = [
-        {
-            id: 1,
-            estCodigo: '10901', estDescricao: 'Fazenda 10901',
-            itemCodigo: '365131', itemDescricao: 'DIMEXION - ONU 3018',
-            unidade: 'LT',
-            tipoCodigo: 'PL', tipoDescricao: 'PLÁSTICA',
-            capacidade: 20, ativo: true
-        },
-        {
-            id: 2,
-            estCodigo: '10902', estDescricao: 'Fazenda 10902',
-            itemCodigo: '361378', itemDescricao: 'OMITE 720 CE BR - ONU 3082',
-            unidade: 'LT',
-            tipoCodigo: 'PL', tipoDescricao: 'PLÁSTICA',
-            capacidade: 10, ativo: true
-        }
-    ];
 
     // ---------- Funções auxiliares (não dependem da instância do widget) ----------
 
@@ -110,10 +93,25 @@ var widget_nw_itensComCtrllDeEmb = (function () {
         return Number(valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
     }
 
+    // O consultarParametros devolve só os códigos; sem descrição, a célula mostra apenas o código.
     function criarCelulaCodigoDescricao(codigo, descricao) {
-        return $('<span>')
-            .append($('<span>', { 'class': 'nwi-codigo', text: codigo }))
-            .append($('<span>', { 'class': 'nwi-descricao', text: ' — ' + descricao }))[0];
+        var $celula = $('<span>').append($('<span>', { 'class': 'nwi-codigo', text: codigo }));
+        if (descricao) $celula.append($('<span>', { 'class': 'nwi-descricao', text: ' — ' + descricao }));
+        return $celula[0];
+    }
+
+    // Converte uma linha de dados do consultarParametros no registro usado pela tabela.
+    function converterParametroEmItem(parametro) {
+        return {
+            id: Number(parametro.idParam),
+            estCodigo: parametro.codEstabel, estDescricao: '',
+            itemCodigo: parametro.item, itemDescricao: '',
+            unidade: parametro.unidade,
+            tipoCodigo: parametro.codTipo, tipoDescricao: '',
+            capacidade: Number(parametro.capacidade),
+            ativo: parametro.ativo === true,
+            versao: parametro.versao
+        };
     }
 
     function obterMaiorId(itens) {
@@ -142,8 +140,13 @@ var widget_nw_itensComCtrllDeEmb = (function () {
         linhaEditando: null,
         linhaExcluindo: null,
 
-        // maior id já usado nos dados mockados (enquanto não há gravação de verdade)
+        // maior id já carregado (os novos itens ganham o próximo número enquanto não há gravação de verdade)
         ultimoId: 0,
+
+        // carga inicial da tabela (consultarParametros)
+        sequenciaCarga: 0,
+        consultaCarga: null,
+        cargaFalhou: false,
 
         // autocompletes do Fluig: filtros (Estabelecimento, Item, Tipo) e Tipo do modal de cadastro
         autocompleteEstabelecimentoFiltro: null,
@@ -155,11 +158,12 @@ var widget_nw_itensComCtrllDeEmb = (function () {
         init: function () {
             var self = this;
             this.prepararAbas();
-            this.ultimoId = obterMaiorId(ITENS_CONTROLADOS_MOCK);
+            this.definirCarregando(true);
 
             this.carregarTabulator().then(function () {
                 self.montarTabela();
             }, function () {
+                self.definirCarregando(false);
                 $('[data-tabela]', self.DOM).html('<p class="nwi-tabela-erro">Não foi possível carregar a tabela. Verifique a conexão com a internet e recarregue a página.</p>');
             });
 
@@ -585,8 +589,9 @@ var widget_nw_itensComCtrllDeEmb = (function () {
         },
 
         montarTabela: function () {
+            var self = this;
             this.tabela = new Tabulator($('[data-tabela]', this.DOM)[0], {
-                data: ITENS_CONTROLADOS_MOCK.slice(),
+                data: [],
                 layout: 'fitColumns',
                 responsiveLayout: false,
                 pagination: true,
@@ -613,6 +618,8 @@ var widget_nw_itensComCtrllDeEmb = (function () {
                 },
                 columns: this.definirColunas()
             });
+            // a tabela só aceita dados depois de construída
+            this.tabela.on('tableBuilt', function () { self.carregarParametros(); });
         },
 
         definirColunas: function () {
@@ -722,10 +729,89 @@ var widget_nw_itensComCtrllDeEmb = (function () {
             return $grupo[0];
         },
 
+        // ---------- Carga da tabela (consultarParametros) ----------
+
+        // enquanto carrega, Buscar e Novo ficam desabilitados
+        definirCarregando: function (carregando) {
+            $('[data-buscar], [data-novo]', this.DOM).prop('disabled', carregando);
+        },
+
+        // busca todas as páginas (cursor proximoId) e só então mostra a tabela
+        carregarParametros: function () {
+            var self = this;
+            var sequenciaDestaCarga = ++this.sequenciaCarga;
+            var itensCarregados = [];
+            var cursoresConsultados = {};
+
+            this.cancelarCarga();
+            this.cargaFalhou = false;
+            this.definirCarregando(true);
+            this.tabela.alert('<div class="nwi-carregando" role="status" aria-label="Carregando itens controlados"><span class="nwi-loader" aria-hidden="true"></span></div>');
+
+            function cargaAindaValida() {
+                return sequenciaDestaCarga === self.sequenciaCarga;
+            }
+
+            function consultarPagina(cursor) {
+                var parametros = { limite: LIMITE_PAGINA_PARAMETROS };
+                if (cursor) parametros.aposId = cursor;
+
+                self.consultaCarga = chamarEmbalagens(ACAO_CONSULTAR_PARAMETROS, parametros);
+                return self.consultaCarga.then(function (resultado) {
+                    if (!cargaAindaValida()) return;
+                    self.consultaCarga = null;
+                    if (!resultado.sucesso) {
+                        throw new Error(MENSAGENS_ERRO[resultado.codigoErro] || resultado.mensagem || 'Não foi possível consultar os itens controlados.');
+                    }
+                    itensCarregados = itensCarregados.concat($.map(resultado.dados || [], converterParametroEmItem));
+
+                    if (!resultado.temMais) return self.exibirItensCarregados(itensCarregados, cargaAindaValida);
+                    if (!resultado.proximoId || cursoresConsultados[resultado.proximoId]) {
+                        throw new Error('A consulta devolveu um cursor inválido.');
+                    }
+                    cursoresConsultados[resultado.proximoId] = true;
+                    return consultarPagina(resultado.proximoId);
+                });
+            }
+
+            return consultarPagina('').then(null, function (erro) {
+                if (!cargaAindaValida()) return;
+                self.mostrarErroDaCarga(erro && erro.message || 'Não foi possível consultar os itens controlados.');
+            });
+        },
+
+        cancelarCarga: function () {
+            if (this.consultaCarga && this.consultaCarga.abort) this.consultaCarga.abort();
+            this.consultaCarga = null;
+        },
+
+        exibirItensCarregados: function (itens, cargaAindaValida) {
+            var self = this;
+            return this.tabela.setData(itens).then(function () {
+                if (!cargaAindaValida()) return;
+                self.ultimoId = obterMaiorId(itens);
+                self.tabela.clearAlert();
+                self.definirCarregando(false);
+            });
+        },
+
+        mostrarErroDaCarga: function (mensagem) {
+            if (window.console) console.error('[itensControlados] ' + mensagem);
+            this.cargaFalhou = true;
+            this.definirCarregando(false);
+            this.tabela.clearData();
+            this.tabela.alert($('<span>').text(mensagem + ' Clique em Buscar para tentar de novo.')[0], 'error');
+        },
+
         // ---------- Filtros ----------
 
         buscar: function () {
             if (!this.tabela) return;
+            // depois de uma falha na carga, Buscar tenta carregar de novo
+            if (this.cargaFalhou) {
+                this.carregarParametros();
+                return;
+            }
             var self = this;
             var estabelecimento = this.lerFiltroComAutocomplete('[data-filtro-est]');
             var item = this.lerFiltroComAutocomplete('[data-filtro-item]');

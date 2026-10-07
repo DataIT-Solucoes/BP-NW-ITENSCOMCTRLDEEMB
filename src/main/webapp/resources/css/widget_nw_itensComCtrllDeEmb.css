@@ -505,6 +505,20 @@
     background-color: var(--nwi-verde-escuro);
 }
 
+/* enquanto a tabela carrega, Buscar e Novo ficam apagados */
+.fluig-style-guide.nwi .nwi-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.fluig-style-guide.nwi .nwi-btn:disabled:active {
+    transform: none;
+}
+
+.fluig-style-guide.nwi .nwi-btn-destaque:disabled:hover {
+    background-color: var(--nwi-verde);
+}
+
 /* Cancelar: contorno verde, ganha fundo verde névoa no hover */
 .fluig-style-guide.nwi .nwi-btn-contorno {
     border-color: var(--nwi-verde);
@@ -703,6 +717,45 @@
     border: 1px solid var(--nwi-linha);
     border-radius: 14px;
     color: var(--nwi-tinta-suave);
+}
+
+/* ---------- Carregamento da tabela (bolinha girando) ---------- */
+.fluig-style-guide.nwi .nwi-tabela.tabulator .tabulator-alert {
+    background: rgba(227, 225, 216, 0.55);
+}
+
+.fluig-style-guide.nwi .nwi-tabela.tabulator .tabulator-alert .tabulator-alert-msg.tabulator-alert-state-msg {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+}
+
+.fluig-style-guide.nwi .nwi-carregando {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fluig-style-guide.nwi .nwi-loader {
+    --cor-fundo: #fff;
+    --cor-destaque: var(--nwi-verde);
+    --tamanho: 1px;
+
+    width: calc(48 * var(--tamanho));
+    height: calc(48 * var(--tamanho));
+    border: calc(5 * var(--tamanho)) solid var(--cor-fundo);
+    border-bottom-color: var(--cor-destaque);
+    border-radius: 50%;
+    display: inline-block;
+    box-sizing: border-box;
+    animation: nwi-carregador-girar 1s linear infinite;
+}
+
+@keyframes nwi-carregador-girar {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 /* ---------- Situação (selo na coluna) ---------- */

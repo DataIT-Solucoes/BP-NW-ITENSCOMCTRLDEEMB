@@ -73,17 +73,15 @@
                 <div class="nwi-modal-grid">
                     <div class="nwi-campo">
                         <label class="nwi-campo-rotulo" for="nwi-form-est-${instanceId}">Estabelecimento</label>
-                        <div class="nwi-campo-caixa" data-auto="estabelecimentos">
-                            <input type="text" id="nwi-form-est-${instanceId}" name="estabelecimento" class="nwi-campo-input nwi-campo-input-simples" placeholder="Digite código ou descrição" autocomplete="off" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="nwi-form-est-lista-${instanceId}" aria-describedby="nwi-form-est-erro-${instanceId}" required autofocus>
-                            <ul class="nwi-sugestoes" id="nwi-form-est-lista-${instanceId}" role="listbox" aria-label="Estabelecimentos encontrados" hidden></ul>
+                        <div class="nwi-campo-caixa">
+                            <input type="text" id="nwi-form-est-${instanceId}" name="estabelecimento" class="nwi-campo-input nwi-campo-input-simples" placeholder="Digite código ou descrição" maxlength="100" autocomplete="off" aria-describedby="nwi-form-est-erro-${instanceId}" required autofocus>
                         </div>
                         <p class="nwi-campo-erro" id="nwi-form-est-erro-${instanceId}" data-erro="estabelecimento"></p>
                     </div>
                     <div class="nwi-campo">
                         <label class="nwi-campo-rotulo" for="nwi-form-item-${instanceId}">Item</label>
-                        <div class="nwi-campo-caixa" data-auto="itens">
-                            <input type="text" id="nwi-form-item-${instanceId}" name="item" class="nwi-campo-input nwi-campo-input-simples" placeholder="Digite código ou descrição" autocomplete="off" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="nwi-form-item-lista-${instanceId}" aria-describedby="nwi-form-item-erro-${instanceId}" required>
-                            <ul class="nwi-sugestoes" id="nwi-form-item-lista-${instanceId}" role="listbox" aria-label="Itens encontrados" hidden></ul>
+                        <div class="nwi-campo-caixa">
+                            <input type="text" id="nwi-form-item-${instanceId}" name="item" class="nwi-campo-input nwi-campo-input-simples" placeholder="Digite código ou descrição" maxlength="100" autocomplete="off" aria-describedby="nwi-form-item-erro-${instanceId}" required>
                         </div>
                         <p class="nwi-campo-erro" id="nwi-form-item-erro-${instanceId}" data-erro="item"></p>
                     </div>
@@ -104,6 +102,7 @@
                         <p class="nwi-campo-erro" id="nwi-form-capacidade-erro-${instanceId}" data-erro="capacidade"></p>
                     </div>
                 </div>
+                <p class="nwi-campo-erro" role="alert" data-cadastro-mensagem></p>
             </div>
 
             <div class="nwi-modal-rodape">
@@ -117,11 +116,20 @@
         <div class="nwi-modal-confirmacao">
             <span class="nwi-confirmacao-icone" aria-hidden="true"><i class="bi bi-trash3"></i></span>
             <h3 class="nwi-modal-titulo" id="nwi-excluir-titulo-${instanceId}">Excluir item controlado?</h3>
-            <p class="nwi-modal-subtitulo" id="nwi-excluir-texto-${instanceId}">O item <strong data-excluir-item></strong> será removido da lista. Essa ação não pode ser desfeita.</p>
+            <p class="nwi-modal-subtitulo" id="nwi-excluir-texto-${instanceId}">Confira a parametrização que será excluída. Essa ação não pode ser desfeita.</p>
+            <dl class="nwi-excluir-detalhes">
+                <div><dt>Estabelecimento</dt><dd data-excluir-estabelecimento></dd></div>
+                <div><dt>Item</dt><dd data-excluir-item></dd></div>
+                <div><dt>Unidade</dt><dd data-excluir-unidade></dd></div>
+                <div><dt>Tipo de Embalagem</dt><dd data-excluir-tipo></dd></div>
+                <div><dt>Capacidade</dt><dd data-excluir-capacidade></dd></div>
+                <div><dt>Situação</dt><dd data-excluir-situacao></dd></div>
+            </dl>
+            <p class="nwi-campo-erro" role="alert" data-excluir-mensagem></p>
         </div>
         <div class="nwi-modal-rodape">
             <button type="button" class="nwi-btn nwi-btn-contorno" autofocus data-fechar-excluir>Cancelar</button>
-            <button type="button" class="nwi-btn nwi-btn-perigo" data-confirmar-excluir><i class="bi bi-trash3" aria-hidden="true"></i>Excluir</button>
+            <button type="button" class="nwi-btn nwi-btn-perigo" data-confirmar-excluir><i class="bi bi-trash3" aria-hidden="true"></i><span data-excluir-botao-texto>Excluir</span></button>
         </div>
     </dialog>
 </div>

@@ -9,7 +9,6 @@
 .fluig-style-guide.nwi {
     --nwi-verde: #006B35;               /* Verde institucional: ação principal, foco, seleção */
     --nwi-verde-escuro: #00552A;        /* hover do verde */
-    --nwi-amarelo: #FFD200;             /* Amarelo solar: destaque pontual (linha nova/editada) */
     --nwi-vermelho: #ED1C24;            /* Vermelho da marca: ação destrutiva */
     --nwi-vermelho-escuro: #C4161C;     /* texto de erro e hover (o vermelho puro tem contraste baixo em letra pequena) */
     --nwi-tinta: #20201E;               /* Carvão: texto e ícones */
@@ -799,6 +798,11 @@
     background-color: var(--nwi-verde);
 }
 
+.fluig-style-guide.nwi .nwi-interruptor:disabled {
+    opacity: 0.6;
+    cursor: progress;
+}
+
 .fluig-style-guide.nwi .nwi-interruptor-bolinha {
     position: absolute;
     top: 3px;
@@ -868,16 +872,6 @@
     border-color: rgba(237, 28, 36, 0.35);
     background-color: rgba(237, 28, 36, 0.08);
     color: var(--nwi-vermelho-escuro);
-}
-
-/* linha recém-cadastrada ou editada brilha em amarelo solar */
-.fluig-style-guide.nwi .nwi-tabela.tabulator .tabulator-row.nwi-linha-nova {
-    animation: nwi-linha-nova 2.2s ease-out;
-}
-
-@keyframes nwi-linha-nova {
-    0%, 35% { background-color: rgba(255, 210, 0, 0.32); }
-    100% { background-color: #fff; }
 }
 
 /* ---------- Modal de cadastro (<dialog> nativo) ---------- */
@@ -1018,7 +1012,7 @@
 
 /* confirmação de exclusão */
 .fluig-style-guide.nwi .nwi-modal.nwi-modal-pequeno {
-    width: min(420px, calc(100vw - 32px));
+    width: min(520px, calc(100vw - 32px));
 }
 
 .fluig-style-guide.nwi .nwi-modal-confirmacao {
@@ -1045,6 +1039,32 @@
 .fluig-style-guide.nwi .nwi-modal-confirmacao strong {
     font-weight: 700;
     color: var(--nwi-tinta);
+}
+
+.fluig-style-guide.nwi .nwi-excluir-detalhes {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    margin: 20px 0 0;
+    padding: 16px;
+    border: 1px solid var(--nwi-linha);
+    border-radius: 12px;
+    background-color: var(--nwi-marfim);
+}
+
+.fluig-style-guide.nwi .nwi-excluir-detalhes dt {
+    margin-bottom: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--nwi-tinta-suave);
+}
+
+.fluig-style-guide.nwi .nwi-excluir-detalhes dd {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--nwi-tinta);
+    overflow-wrap: anywhere;
 }
 
 .fluig-style-guide.nwi .nwi-btn-perigo {
@@ -1149,8 +1169,7 @@
     }
 
     .fluig-style-guide.nwi .nwi-modal[open],
-    .fluig-style-guide.nwi .nwi-modal[open]::backdrop,
-    .fluig-style-guide.nwi .nwi-tabela.tabulator .tabulator-row.nwi-linha-nova {
+    .fluig-style-guide.nwi .nwi-modal[open]::backdrop {
         animation: none;
     }
 }

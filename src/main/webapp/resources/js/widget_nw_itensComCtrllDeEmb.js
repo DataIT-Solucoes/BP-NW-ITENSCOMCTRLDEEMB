@@ -12,6 +12,8 @@ var widget_nw_itensComCtrllDeEmb = (function () {
     var ACAO_APOIAR_ESTABELECIMENTOS = 'apoiarEstabelecimentos';
     var ACAO_APOIAR_ITENS = 'apoiarItens';
     var ACAO_CONSULTAR_PARAMETROS = 'consultarParametros';
+    var ACAO_INCLUIR_PARAMETRO = 'incluirParametro';
+    var ACAO_ALTERAR_PARAMETRO = 'alterarParametro';
 
     var TODOS = 'todos';
     var MINIMO_CARACTERES_BUSCA = 2;
@@ -19,28 +21,12 @@ var widget_nw_itensComCtrllDeEmb = (function () {
     var LIMITE_PAGINA_PARAMETROS = 100;
     var ATRASO_CONSULTA_TIPOS_MS = 250;
     var ATRASO_CONSULTA_APOIO_MS = 350;
-    var ATRASO_FECHAR_SUGESTOES_MS = 150;
-    var ESPERA_ANIMACAO_INTERRUPTOR_MS = 220;
-    var DURACAO_DESTAQUE_LINHA_MS = 2200;
 
     var MENSAGENS_ERRO = {
         AUTORIZACAO_NAO_CONFIGURADA: 'O acesso a esta tela ainda não foi configurado no Fluig (grupos e permissões).',
-        SEM_PERMISSAO: 'Você não tem permissão para esta ação.'
-    };
-
-    // DADOS MOCKADOS, só para visualizar a tela. Trocar pelos datasets/REST quando forem definidos.
-    // Listas de apoio (estabelecimento e item) usadas pelos autocompletes. O tipo de embalagem vem do dataset (FLUIGC.autocomplete).
-    var OPCOES_APOIO_MOCK = {
-        estabelecimentos: [
-            { codigo: '10901', descricao: 'Fazenda 10901' },
-            { codigo: '10902', descricao: 'Fazenda 10902' },
-            { codigo: '10904', descricao: 'Fazenda 10904' }
-        ],
-        itens: [
-            { codigo: '365131', descricao: 'DIMEXION - ONU 3018', unidade: 'LT' },
-            { codigo: '361378', descricao: 'OMITE 720 CE BR - ONU 3082', unidade: 'LT' },
-            { codigo: '357867', descricao: 'REGLONE', unidade: 'LT' }
-        ]
+        SEM_PERMISSAO: 'Você não tem permissão para esta ação.',
+        ESCRITA_DESABILITADA: 'A gravação de parâmetros ainda não está habilitada no dataset.',
+        CONFLITO_VERSAO: 'Este parâmetro foi alterado por outra pessoa. A lista será recarregada; confira o registro antes de tentar novamente.'
     };
 
     // ---------- Funções auxiliares (não dependem da instância do widget) ----------
@@ -82,12 +68,6 @@ var widget_nw_itensComCtrllDeEmb = (function () {
         return envelope;
     }
 
-    // Minúsculas e sem acento, para a busca não depender disso.
-    function normalizarTexto(texto) {
-        return String(texto || '').trim().toLowerCase()
-            .normalize('NFD').replace(/[̀-ͯ]/g, '');
-    }
-
     // 4 casas decimais e vírgula, como no Progress.
     function formatarCapacidade(valor) {
         return Number(valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
@@ -114,16 +94,33 @@ var widget_nw_itensComCtrllDeEmb = (function () {
         };
     }
 
-    function obterMaiorId(itens) {
-        var maiorId = 0;
-        $.each(itens, function (indice, item) {
-            maiorId = Math.max(maiorId, item.id);
-        });
-        return maiorId;
+    function formatarRotulo(codigo, descricao) {
+        return descricao ? codigo + ' — ' + descricao : codigo;
     }
 
-    function formatarRotulo(codigo, descricao) {
-        return codigo + ' — ' + descricao;
+    function gerarChaveIdempotente() {
+        var bytes = new Uint8Array(16);
+        window.crypto.getRandomValues(bytes);
+        bytes[6] = (bytes[6] & 0x0f) | 0x40;
+        bytes[8] = (bytes[8] & 0x3f) | 0x80;
+        var hexadecimal = $.map(bytes, function (byte) { return (byte + 0x100).toString(16).slice(1); }).join('');
+        return hexadecimal.slice(0, 8) + '-' + hexadecimal.slice(8, 12) + '-' + hexadecimal.slice(12, 16) + '-' + hexadecimal.slice(16, 20) + '-' + hexadecimal.slice(20);
+    }
+
+    function resultadoComandoIncerto(codigo) {
+        return codigo === 'FALHA_CHAMADA' || codigo === 'RESPOSTA_INVALIDA' || codigo === 'HTTP_STATUS_INDISPONIVEL' || /^HTTP_/.test(codigo || '');
+    }
+
+    function fotografiaParametroValida(resultado, parametros, acaoDataset) {
+        if (acaoDataset === ACAO_INCLUIR_PARAMETRO) {
+            if (!/^[1-9][0-9]*$/.test(String(resultado.idParam)) || Number(resultado.idParam) > 2147483647 ||
+                resultado.codTipo !== parametros.codTipo || resultado.ativo !== parametros.ativo) return false;
+        } else if (Number(resultado.idParam) !== parametros.idParam) return false;
+        if (parametros.acao === 'EXCLUIR') return resultado.excluido === true;
+        return resultado.excluido === false && typeof resultado.codEstabel === 'string' && resultado.codEstabel === parametros.codEstabel &&
+            typeof resultado.item === 'string' && resultado.item === parametros.item && typeof resultado.codTipo === 'string' && !!resultado.codTipo &&
+            typeof resultado.unidade === 'string' && !!resultado.unidade && typeof resultado.capacidade === 'number' && isFinite(resultado.capacidade) && resultado.capacidade > 0 &&
+            typeof resultado.ativo === 'boolean' && /^[1-9][0-9]*$/.test(String(resultado.versao)) && Number(resultado.versao) <= 2147483647;
     }
 
     // ---------- Widget ----------
@@ -140,23 +137,28 @@ var widget_nw_itensComCtrllDeEmb = (function () {
         linhaEditando: null,
         linhaExcluindo: null,
 
-        // maior id já carregado (os novos itens ganham o próximo número enquanto não há gravação de verdade)
-        ultimoId: 0,
-
         // carga inicial da tabela (consultarParametros)
         sequenciaCarga: 0,
         consultaCarga: null,
         cargaFalhou: false,
+        filtrosAplicados: null,
+        gravando: false,
+        situacoesPendentes: null,
+        intencoesComando: null,
 
-        // autocompletes do Fluig: filtros (Estabelecimento, Item, Tipo) e Tipo do modal de cadastro
+        // autocompletes do Fluig: filtros e modal de cadastro
         autocompleteEstabelecimentoFiltro: null,
         autocompleteItemFiltro: null,
         autocompleteTipoFiltro: null,
+        autocompleteEstabelecimentoCadastro: null,
+        autocompleteItemCadastro: null,
         autocompleteTipoCadastro: null,
 
         // método iniciado quando a widget é carregada
         init: function () {
             var self = this;
+            this.intencoesComando = {};
+            this.situacoesPendentes = {};
             this.prepararAbas();
             this.definirCarregando(true);
 
@@ -167,11 +169,9 @@ var widget_nw_itensComCtrllDeEmb = (function () {
                 $('[data-tabela]', self.DOM).html('<p class="nwi-tabela-erro">Não foi possível carregar a tabela. Verifique a conexão com a internet e recarregue a página.</p>');
             });
 
-            this.prepararAutocompletes();
             // Select2 vem do CDN, carregado pelo view.ftl; se o CDN falhar, segue com o select nativo
             if ($.fn.select2) this.prepararSelectSituacao();
             this.prepararAutocompletesDosFiltros();
-            this.autocompleteTipoCadastro = this.prepararAutocompleteTipoDoCadastro();
             this.prepararModalCadastro();
             this.prepararModalExcluir();
         },
@@ -241,136 +241,8 @@ var widget_nw_itensComCtrllDeEmb = (function () {
             });
         },
 
-        // ---------- Autocomplete próprio (estabelecimento e item) ----------
-
-        // um só conjunto de handlers, delegado a partir da div do widget: vale para os filtros e para o modal
-        prepararAutocompletes: function () {
-            var self = this;
-            var $raiz = $(this.DOM);
-
-            $raiz.on('input.itensControlados', '[data-auto] .nwi-campo-input', function () {
-                var $campo = $(this);
-                $campo.removeData('codigo');
-                if ($campo.attr('name') === 'item') self.preencherUnidade('');
-                self.abrirSugestoes($campo);
-            });
-
-            $raiz.on('focus.itensControlados', '[data-auto] .nwi-campo-input', function () {
-                self.abrirSugestoes($(this));
-            });
-
-            $raiz.on('keydown.itensControlados', '[data-auto] .nwi-campo-input', function (evento) {
-                self.tratarTeclaNasSugestoes($(this), evento);
-            });
-
-            // clique na sugestão: mousedown, porque o blur do campo fecha a lista antes do click
-            $raiz.on('mousedown.itensControlados', '[data-auto] .nwi-sugestao', function (evento) {
-                evento.preventDefault();
-                var $campo = $(this).closest('[data-auto]').find('.nwi-campo-input');
-                self.escolherSugestao($campo, $(this).data('indice'));
-            });
-
-            $raiz.on('blur.itensControlados', '[data-auto] .nwi-campo-input', function () {
-                var $campo = $(this);
-                setTimeout(function () { self.fecharSugestoes($campo); }, ATRASO_FECHAR_SUGESTOES_MS);
-            });
-        },
-
-        // lista filtrada pelo que foi digitado (a partir de 2 caracteres, como no protótipo); null = ainda não buscar
-        filtrarOpcoes: function ($campo) {
-            var nomeFonte = $campo.closest('[data-auto]').data('auto');
-            var opcoes = OPCOES_APOIO_MOCK[nomeFonte] || [];
-            var termo = normalizarTexto($campo.val());
-            if (termo.length < MINIMO_CARACTERES_BUSCA) return null;
-
-            var encontradas = $.grep(opcoes, function (opcao) {
-                return normalizarTexto(opcao.codigo + ' ' + opcao.descricao).indexOf(termo) !== -1;
-            });
-            return encontradas.slice(0, LIMITE_SUGESTOES);
-        },
-
-        abrirSugestoes: function ($campo) {
-            if ($campo.prop('readonly')) return;
-            var $lista = $campo.closest('[data-auto]').find('.nwi-sugestoes');
-            var opcoes = this.filtrarOpcoes($campo);
-
-            if (opcoes === null) {
-                this.fecharSugestoes($campo);
-                return;
-            }
-
-            $lista.empty();
-            if (!opcoes.length) {
-                $lista.append($('<li>').addClass('nwi-sugestao-vazia').text('Nenhuma opção encontrada.'));
-            } else {
-                $.each(opcoes, function (indice, opcao) {
-                    $('<li>')
-                        .addClass('nwi-sugestao')
-                        .attr({ role: 'option', 'aria-selected': 'false' })
-                        .data('indice', indice)
-                        .append($('<span>').addClass('nwi-sugestao-codigo').text(opcao.codigo))
-                        .append($('<span>').addClass('nwi-sugestao-descricao').text(opcao.descricao))
-                        .appendTo($lista);
-                });
-            }
-            $lista.prop('hidden', false);
-            $campo.attr('aria-expanded', 'true');
-        },
-
-        fecharSugestoes: function ($campo) {
-            $campo.closest('[data-auto]').find('.nwi-sugestoes').prop('hidden', true).empty();
-            $campo.attr('aria-expanded', 'false');
-        },
-
-        // setas navegam, Enter escolhe, Esc fecha
-        tratarTeclaNasSugestoes: function ($campo, evento) {
-            var $opcoes = $campo.closest('[data-auto]').find('.nwi-sugestoes .nwi-sugestao');
-
-            if (evento.key === 'Escape') {
-                this.fecharSugestoes($campo);
-                return;
-            }
-            if (!$opcoes.length) return;
-
-            var indiceAtivo = $opcoes.index($opcoes.filter('.is-ativa'));
-
-            if (evento.key === 'ArrowDown' || evento.key === 'ArrowUp') {
-                evento.preventDefault();
-                this.destacarSugestao($opcoes, indiceAtivo, evento.key === 'ArrowDown');
-            } else if (evento.key === 'Enter' && indiceAtivo !== -1) {
-                evento.preventDefault();
-                this.escolherSugestao($campo, $opcoes.eq(indiceAtivo).data('indice'));
-            }
-        },
-
-        // move o destaque para a próxima (ou anterior) sugestão, dando a volta no começo e no fim da lista
-        destacarSugestao: function ($opcoes, indiceAtivo, paraBaixo) {
-            var indiceDestino;
-            if (paraBaixo) indiceDestino = (indiceAtivo + 1) % $opcoes.length;
-            else indiceDestino = indiceAtivo <= 0 ? $opcoes.length - 1 : indiceAtivo - 1;
-
-            $opcoes.removeClass('is-ativa').attr('aria-selected', 'false');
-            var $destino = $opcoes.eq(indiceDestino).addClass('is-ativa').attr('aria-selected', 'true');
-            $destino[0].scrollIntoView({ block: 'nearest' });
-        },
-
-        escolherSugestao: function ($campo, indice) {
-            var opcoes = this.filtrarOpcoes($campo);
-            if (!opcoes || !opcoes[indice]) return;
-            var escolhida = opcoes[indice];
-            var nomeCampo = $campo.attr('name');
-
-            $campo.val(formatarRotulo(escolhida.codigo, escolhida.descricao));
-            $campo.data('codigo', escolhida.codigo);
-            this.fecharSugestoes($campo);
-
-            // o item define a unidade do cadastro
-            if (nomeCampo === 'item') this.preencherUnidade(escolhida.unidade || '');
-            if (nomeCampo) this.marcarErro(nomeCampo, '');
-        },
-
         preencherUnidade: function (unidade) {
-            $('[name="unidade"]', this.DOM).val(unidade);
+            this.obterCampoDoCadastro('unidade').val(unidade);
         },
 
         // ---------- Select2 (Situação) ----------
@@ -392,10 +264,8 @@ var widget_nw_itensComCtrllDeEmb = (function () {
         // ---------- Autocomplete do Fluig (consulta as ações de apoio do dataset dsNwEmbalagens) ----------
 
         prepararAutocompletesDosFiltros: function () {
-            var self = this;
             var $estabelecimento = $('[data-filtro-est]', this.DOM);
             var $item = $('[data-filtro-item]', this.DOM);
-            var avisouFaltaEstabelecimento = false;
 
             this.autocompleteEstabelecimentoFiltro = this.prepararAutocompleteApoio($estabelecimento, {
                 identificador: 'estabelecimento-filtro',
@@ -404,12 +274,6 @@ var widget_nw_itensComCtrllDeEmb = (function () {
                 atraso: ATRASO_CONSULTA_APOIO_MS,
                 montarParametros: function (termo) {
                     return { filtro: termo, limite: LIMITE_SUGESTOES };
-                },
-                // trocar o estabelecimento invalida o item escolhido (o item é consultado dentro dele)
-                aoMudarSelecao: function () {
-                    avisouFaltaEstabelecimento = false;
-                    $item.removeData('codigo').removeData('registro');
-                    if (self.autocompleteItemFiltro) self.autocompleteItemFiltro.val('');
                 }
             });
 
@@ -418,17 +282,11 @@ var widget_nw_itensComCtrllDeEmb = (function () {
                 acao: ACAO_APOIAR_ITENS,
                 nomeDoApoio: 'os itens',
                 atraso: ATRASO_CONSULTA_APOIO_MS,
-                // o item só pode ser consultado depois de escolher o estabelecimento
                 montarParametros: function (termo) {
+                    var parametros = { filtro: termo, limite: LIMITE_SUGESTOES };
                     var codigoEstabelecimento = $estabelecimento.data('codigo');
-                    if (!codigoEstabelecimento) {
-                        if (!avisouFaltaEstabelecimento) {
-                            self.avisar('Escolha o estabelecimento na lista antes de buscar o item.', 'info');
-                            avisouFaltaEstabelecimento = true;
-                        }
-                        return null;
-                    }
-                    return { codEstabel: codigoEstabelecimento, filtro: termo, limite: LIMITE_SUGESTOES };
+                    if (codigoEstabelecimento) parametros.codEstabel = codigoEstabelecimento;
+                    return parametros;
                 }
             });
 
@@ -440,6 +298,37 @@ var widget_nw_itensComCtrllDeEmb = (function () {
                 montarParametros: function (termo) {
                     return { filtro: termo, ativo: TODOS, limite: LIMITE_SUGESTOES };
                 }
+            });
+        },
+
+        prepararAutocompletesDoCadastro: function () {
+            var self = this;
+            var $estabelecimento = this.obterCampoDoCadastro('estabelecimento');
+            var $item = this.obterCampoDoCadastro('item');
+
+            this.autocompleteEstabelecimentoCadastro = this.prepararAutocompleteApoio($estabelecimento, {
+                identificador: 'estabelecimento-cadastro',
+                acao: ACAO_APOIAR_ESTABELECIMENTOS,
+                nomeDoApoio: 'os estabelecimentos',
+                atraso: ATRASO_CONSULTA_APOIO_MS,
+                montarParametros: function (termo) {
+                    return { filtro: termo, limite: LIMITE_SUGESTOES };
+                }
+            });
+
+            this.autocompleteItemCadastro = this.prepararAutocompleteApoio($item, {
+                identificador: 'item-cadastro',
+                acao: ACAO_APOIAR_ITENS,
+                nomeDoApoio: 'os itens',
+                atraso: ATRASO_CONSULTA_APOIO_MS,
+                montarParametros: function (termo) {
+                    var parametros = { filtro: termo, limite: LIMITE_SUGESTOES };
+                    var codigoEstabelecimento = $estabelecimento.data('codigo');
+                    if (codigoEstabelecimento) parametros.codEstabel = codigoEstabelecimento;
+                    return parametros;
+                },
+                aoMudarSelecao: function () { self.preencherUnidade(''); },
+                aoSelecionar: function (registro) { self.preencherUnidade(registro.unidade || ''); }
             });
         },
 
@@ -456,7 +345,7 @@ var widget_nw_itensComCtrllDeEmb = (function () {
             });
         },
 
-        // A escolha fica no próprio campo: data('codigo') e data('registro') = { codigo, descricao }; digitar depois dela apaga os dois.
+        // A escolha fica no próprio campo; o registro do item conserva a unidade devolvida em un.
         // configuracao:
         //   identificador     nome único do autocomplete dentro do widget
         //   acao              ação do dataset consultada
@@ -464,27 +353,34 @@ var widget_nw_itensComCtrllDeEmb = (function () {
         //   atraso            espera (ms) depois da última tecla antes de chamar o servidor
         //   montarParametros  recebe o termo digitado e devolve os parâmetros da ação (null = ainda não pode consultar)
         //   aoMudarSelecao    opcional; chamado quando a escolha é trocada ou apagada
+        //   aoSelecionar      opcional; recebe o registro escolhido depois de armazená-lo no campo
         prepararAutocompleteApoio: function ($campo, configuracao) {
             var self = this;
             var buscaApoio = { sequencia: 0, temporizador: null, consulta: null, configuracao: configuracao };
             var autocomplete;
+            $campo.data('buscaApoio', buscaApoio);
 
             function avisarMudancaDeSelecao() {
                 if (configuracao.aoMudarSelecao) configuracao.aoMudarSelecao();
             }
 
-            $campo.on('input', function () {
+            $campo.off('.nwiApoio').on('input.nwiApoio', function () {
+                if ($campo.prop('readonly')) return;
                 $campo.removeData('codigo').removeData('registro');
                 self.cancelarConsultaApoio(buscaApoio);
                 avisarMudancaDeSelecao();
             });
-            $campo.on('fluig.autocomplete.selected fluig.autocomplete.autocompleted', function (evento) {
+            $campo.on('fluig.autocomplete.selected.nwiApoio fluig.autocomplete.autocompleted.nwiApoio', function (evento) {
                 var apoio = evento.item;
+                if ($campo.prop('readonly')) return;
                 if (!apoio || typeof apoio.codigo !== 'string' || !apoio.codigo) return;
                 avisarMudancaDeSelecao();
                 autocomplete.val(apoio.rotulo);
-                $campo.data('codigo', apoio.codigo).data('registro', { codigo: apoio.codigo, descricao: apoio.descricao });
+                var registro = { codigo: apoio.codigo, descricao: apoio.descricao };
+                if (typeof apoio.unidade === 'string') registro.unidade = apoio.unidade;
+                $campo.data('codigo', apoio.codigo).data('registro', registro);
                 self.cancelarConsultaApoio(buscaApoio);
+                if (configuracao.aoSelecionar) configuracao.aoSelecionar(registro);
                 if ($campo.attr('name')) self.marcarErro($campo.attr('name'), '');
             });
 
@@ -497,7 +393,15 @@ var widget_nw_itensComCtrllDeEmb = (function () {
                 autoLoading: false,
                 displayKey: 'rotulo',
                 templates: { suggestion: '.nwi-apoio-sugestao-' + this.instanceId },
-                source: function (termo, responder) { self.consultarApoio(buscaApoio, termo, responder); }
+                source: function (termo, responder) {
+                    if ($campo.prop('readonly')) { responder([]); return; }
+                    var registro = $campo.data('registro');
+                    if (registro && termo === formatarRotulo(registro.codigo, registro.descricao)) {
+                        responder([$.extend({}, registro, { rotulo: termo })]);
+                        return;
+                    }
+                    self.consultarApoio(buscaApoio, termo, responder);
+                }
             });
             return autocomplete;
         },
@@ -562,7 +466,9 @@ var widget_nw_itensComCtrllDeEmb = (function () {
                 return opcao && typeof opcao.codigo === 'string' && opcao.codigo && typeof opcao.descricao === 'string';
             });
             return $.map(opcoesValidas, function (opcao) {
-                return { codigo: opcao.codigo, descricao: opcao.descricao, rotulo: formatarRotulo(opcao.codigo, opcao.descricao) };
+                var sugestao = { codigo: opcao.codigo, descricao: opcao.descricao, rotulo: formatarRotulo(opcao.codigo, opcao.descricao) };
+                if (typeof opcao.un === 'string') sugestao.unidade = opcao.un;
+                return sugestao;
             });
         },
 
@@ -573,8 +479,9 @@ var widget_nw_itensComCtrllDeEmb = (function () {
         // preenche o campo Tipo do modal como se a pessoa tivesse escolhido da lista (edição)
         definirTipoNoCadastro: function (codigo, descricao) {
             var $campo = this.obterCampoDoCadastro('tipo');
-            this.autocompleteTipoCadastro.val(formatarRotulo(codigo, descricao));
             $campo.data('codigo', codigo).data('registro', { codigo: codigo, descricao: descricao });
+            this.autocompleteTipoCadastro.val(formatarRotulo(codigo, descricao));
+            this.autocompleteTipoCadastro.close();
         },
 
         // ---------- Tabela ----------
@@ -678,6 +585,7 @@ var widget_nw_itensComCtrllDeEmb = (function () {
         },
 
         tratarCliqueNasAcoes: function (evento, linha) {
+            if (this.gravando) return;
             var $botao = $(evento.target).closest('[data-acao]');
             if (!$botao.length || $botao.prop('disabled')) return;
 
@@ -687,15 +595,32 @@ var widget_nw_itensComCtrllDeEmb = (function () {
             else if (acao === 'excluir') this.abrirModalExcluir(linha);
         },
 
-        // MOCK: a troca de situação só altera a linha da tela. Trocar pelo PATCH quando o serviço existir.
         alterarSituacao: function (linha, $interruptor) {
-            var ativo = !linha.getData().ativo;
-            // o update redesenha a célula: esperar a bolinha chegar ao outro lado antes disso
-            $interruptor.prop('disabled', true).attr({
-                'aria-checked': ativo ? 'true' : 'false',
-                title: ativo ? 'Desativar' : 'Ativar'
+            var self = this;
+            var item = linha.getData();
+            if (!this.situacoesPendentes) this.situacoesPendentes = {};
+            if (this.situacoesPendentes[item.id]) return;
+            var parametros = this.montarComandoParametro(item, item.ativo ? 'INATIVAR' : 'ALTERAR', { ativo: !item.ativo });
+            if (!parametros) return;
+            this.situacoesPendentes[item.id] = true;
+            $interruptor.prop('disabled', true).attr('aria-busy', 'true');
+
+            function finalizar() {
+                delete self.situacoesPendentes[item.id];
+                $interruptor.prop('disabled', false).attr('aria-busy', 'false');
+                var linhaAtual = self.tabela ? self.tabela.getRow(item.id) : linha;
+                if (linhaAtual) linhaAtual.reformat();
+            }
+
+            return this.executarComandoParametro(parametros).then(function (saida) {
+                if (!saida.ok) { self.informarFalhaComando(saida); return; }
+                return self.aplicarFotografiaParametro(linha, saida.resultado, null, false).then(function () {
+                    self.avisar(saida.resultado.repeticao ? 'Comando já confirmado anteriormente.' : (saida.resultado.ativo ? 'Parâmetro ativado.' : 'Parâmetro desativado.'), 'success');
+                });
+            }).then(finalizar, function () {
+                finalizar();
+                self.avisar('Não foi possível atualizar a situação na tela. Clique em Buscar para conferir o registro.', 'warning');
             });
-            setTimeout(function () { linha.update({ ativo: ativo }); }, ESPERA_ANIMACAO_INTERRUPTOR_MS);
         },
 
         montarBotoesAcoes: function (item) {
@@ -708,6 +633,8 @@ var widget_nw_itensComCtrllDeEmb = (function () {
                 'data-acao': 'situacao',
                 role: 'switch',
                 'aria-checked': item.ativo ? 'true' : 'false',
+                disabled: !!(this.situacoesPendentes && this.situacoesPendentes[item.id]),
+                'aria-busy': this.situacoesPendentes && this.situacoesPendentes[item.id] ? 'true' : 'false',
                 'aria-label': 'Ativo: ' + descricaoDoItem,
                 title: item.ativo ? 'Desativar' : 'Ativar'
             }).append($('<span>', { 'class': 'nwi-interruptor-bolinha', 'aria-hidden': 'true' })).appendTo($grupo);
@@ -739,6 +666,8 @@ var widget_nw_itensComCtrllDeEmb = (function () {
         // busca todas as páginas (cursor proximoId) e só então mostra a tabela
         // filtros (opcional): { parametros: filtros do consultarParametros }
         carregarParametros: function (filtros) {
+            if (this.gravando) return;
+            this.filtrosAplicados = filtros || null;
             var self = this;
             var sequenciaDestaCarga = ++this.sequenciaCarga;
             var itensCarregados = [];
@@ -796,7 +725,6 @@ var widget_nw_itensComCtrllDeEmb = (function () {
             var self = this;
             return this.tabela.setData(itens).then(function () {
                 if (!cargaAindaValida()) return;
-                self.ultimoId = obterMaiorId(itens);
                 self.tabela.clearAlert();
                 self.definirCarregando(false);
             });
@@ -862,6 +790,9 @@ var widget_nw_itensComCtrllDeEmb = (function () {
             var self = this;
             this.$modalCadastro = $('[data-modal-cadastro]', this.DOM);
             this.$formulario = this.$modalCadastro.find('form');
+            this.$modalCadastro.on('cancel', function (evento) {
+                if (self.gravando) evento.preventDefault();
+            });
 
             // fechar com Esc não passa por fecharModalCadastro: o "close" cobre esse caso.
             // Ele é assíncrono: se o modal já foi reaberto (ex.: em modo edição), não apaga o que foi preenchido.
@@ -886,7 +817,7 @@ var widget_nw_itensComCtrllDeEmb = (function () {
         },
 
         obterCampoDoCadastro: function (nome) {
-            return this.$formulario.find('[name="' + nome + '"]');
+            return this.$formulario.find('[name="' + nome + '"]').not('.tt-hint');
         },
 
         abrirModalNovo: function () {
@@ -899,6 +830,7 @@ var widget_nw_itensComCtrllDeEmb = (function () {
 
         // mesmo modal para criar (linha = null) e editar (linha = linha do Tabulator)
         abrirModalCadastro: function (linha) {
+            if (this.gravando) return;
             var modal = this.$modalCadastro[0];
             if (!modal || typeof modal.showModal !== 'function' || modal.open) return;
             // limpa também ao abrir: o evento "close" é assíncrono e o Chrome não o dispara com a aba oculta
@@ -910,8 +842,12 @@ var widget_nw_itensComCtrllDeEmb = (function () {
             this.$modalCadastro.find('[data-modal-salvar]').text(editando ? 'Salvar alterações' : 'Criar parametrização');
 
             // estabelecimento e item são imutáveis na edição
-            this.$formulario.find('[name="estabelecimento"], [name="item"]').prop('readonly', editando);
+            this.obterCampoDoCadastro('estabelecimento').prop('readonly', editando);
+            this.obterCampoDoCadastro('item').prop('readonly', editando);
 
+            // Campos imutáveis ficam sem componente de busca; Novo recebe instâncias limpas.
+            if (!editando) this.prepararAutocompletesDoCadastro();
+            this.autocompleteTipoCadastro = this.prepararAutocompleteTipoDoCadastro();
             if (editando) this.preencherFormularioComLinha(linha);
             modal.showModal();
         },
@@ -920,15 +856,18 @@ var widget_nw_itensComCtrllDeEmb = (function () {
             var item = linha.getData();
             this.linhaEditando = linha;
             this.obterCampoDoCadastro('estabelecimento')
-                .val(formatarRotulo(item.estCodigo, item.estDescricao)).data('codigo', item.estCodigo);
+                .val(formatarRotulo(item.estCodigo, item.estDescricao))
+                .data('codigo', item.estCodigo).data('registro', { codigo: item.estCodigo, descricao: item.estDescricao });
             this.obterCampoDoCadastro('item')
-                .val(formatarRotulo(item.itemCodigo, item.itemDescricao)).data('codigo', item.itemCodigo);
+                .val(formatarRotulo(item.itemCodigo, item.itemDescricao))
+                .data('codigo', item.itemCodigo).data('registro', { codigo: item.itemCodigo, descricao: item.itemDescricao, unidade: item.unidade });
             this.obterCampoDoCadastro('unidade').val(item.unidade);
             this.definirTipoNoCadastro(item.tipoCodigo, item.tipoDescricao);
             this.obterCampoDoCadastro('capacidade').val(item.capacidade);
         },
 
         fecharModalCadastro: function () {
+            if (this.gravando) return;
             var modal = this.$modalCadastro[0];
             if (!modal || !modal.open) return;
             modal.close();
@@ -938,10 +877,20 @@ var widget_nw_itensComCtrllDeEmb = (function () {
         limparFormulario: function () {
             var self = this;
             this.linhaEditando = null;
+            this.$modalCadastro.find('[data-cadastro-mensagem]').text('');
+            $.each({ estabelecimento: 'autocompleteEstabelecimentoCadastro', item: 'autocompleteItemCadastro', tipo: 'autocompleteTipoCadastro' }, function (campo, propriedade) {
+                var $campo = self.obterCampoDoCadastro(campo);
+                var buscaApoio = $campo.data('buscaApoio');
+                if (buscaApoio) self.cancelarConsultaApoio(buscaApoio);
+                var autocomplete = self[propriedade];
+                if (autocomplete) {
+                    autocomplete.close();
+                    autocomplete.destroy();
+                }
+                self[propriedade] = null;
+                $campo.off('.nwiApoio').removeData('buscaApoio').removeData('codigo').removeData('registro');
+            });
             this.$formulario[0].reset();
-            this.$formulario.find('.nwi-campo-input').removeData('codigo').removeData('registro');
-            if (this.autocompleteTipoCadastro) this.autocompleteTipoCadastro.val('');
-            this.$formulario.find('.nwi-sugestoes').prop('hidden', true).empty();
             $.each(['estabelecimento', 'item', 'tipo', 'capacidade'], function (indice, campo) {
                 self.marcarErro(campo, '');
             });
@@ -955,16 +904,16 @@ var widget_nw_itensComCtrllDeEmb = (function () {
         },
 
         // devolve o registro escolhido no autocomplete (null quando a pessoa digitou algo fora da lista)
-        obterOpcaoEscolhida: function (nomeCampo, nomeFonte) {
-            var codigo = this.obterCampoDoCadastro(nomeCampo).data('codigo');
-            if (!codigo) return null;
-            var encontradas = $.grep(OPCOES_APOIO_MOCK[nomeFonte], function (opcao) { return opcao.codigo === codigo; });
-            return encontradas[0] || null;
+        obterOpcaoEscolhida: function (nomeCampo) {
+            var $campo = this.obterCampoDoCadastro(nomeCampo);
+            var registro = $campo.data('registro');
+            return registro && registro.codigo === $campo.data('codigo') ? registro : null;
         },
 
         // ---------- Salvar ----------
 
         salvar: function () {
+            if (this.gravando) return;
             var escolhas = this.lerEscolhasDoFormulario();
             var primeiroCampoInvalido = this.validarEscolhas(escolhas);
             if (primeiroCampoInvalido) {
@@ -976,8 +925,8 @@ var widget_nw_itensComCtrllDeEmb = (function () {
 
         lerEscolhasDoFormulario: function () {
             return {
-                estabelecimento: this.obterOpcaoEscolhida('estabelecimento', 'estabelecimentos'),
-                item: this.obterOpcaoEscolhida('item', 'itens'),
+                estabelecimento: this.obterOpcaoEscolhida('estabelecimento'),
+                item: this.obterOpcaoEscolhida('item'),
                 tipo: this.obterCampoDoCadastro('tipo').data('registro') || null,
                 capacidade: parseFloat(String(this.obterCampoDoCadastro('capacidade').val()).replace(',', '.'))
             };
@@ -996,8 +945,9 @@ var widget_nw_itensComCtrllDeEmb = (function () {
             if (!escolhas.estabelecimento) recusar('estabelecimento', 'Selecione um estabelecimento da lista.');
             if (!escolhas.item) recusar('item', 'Selecione um item da lista.');
             if (!escolhas.tipo) recusar('tipo', 'Selecione um tipo de embalagem da lista.');
-            if (isNaN(escolhas.capacidade)) recusar('capacidade', 'Informe a capacidade.');
+            if (!isFinite(escolhas.capacidade)) recusar('capacidade', 'Informe uma capacidade válida.');
             else if (escolhas.capacidade <= 0) recusar('capacidade', 'A capacidade deve ser maior que zero.');
+            else if (Math.abs(escolhas.capacidade * 10000 - Math.round(escolhas.capacidade * 10000)) > 0.00001) recusar('capacidade', 'A capacidade deve ter até quatro casas decimais.');
             return primeiroInvalido;
         },
 
@@ -1011,28 +961,137 @@ var widget_nw_itensComCtrllDeEmb = (function () {
             };
         },
 
-        // MOCK: só altera a tabela da tela. Trocar pela gravação no dataset/REST quando existir.
-        gravarRegistro: function (registro) {
-            var self = this;
-            var linhaEditando = this.linhaEditando;   // guardar antes: fechar limpa o formulário
-            this.fecharModalCadastro();
-            if (!this.tabela) return;
-
-            var gravacao;
-            if (linhaEditando) {
-                gravacao = linhaEditando.update(registro).then(function () {
-                    linhaEditando.reformat();   // atualiza o aria-label dos botões de ação
-                    return linhaEditando;
-                });
-            } else {
-                registro.id = ++this.ultimoId;
-                registro.ativo = true;
-                gravacao = this.tabela.addRow(registro);
+        montarComandoParametro: function (item, acao, alteracoes) {
+            var parametros = $.extend({
+                idParam: Number(item.id), codEstabel: item.estCodigo, item: item.itemCodigo,
+                codTipo: item.tipoCodigo, capacidade: Number(item.capacidade), unidade: item.unidade,
+                ativo: item.ativo, versao: Number(item.versao), acao: acao
+            }, alteracoes);
+            if (!/^[1-9][0-9]*$/.test(String(parametros.idParam)) || parametros.idParam > 2147483647 ||
+                !/^[1-9][0-9]*$/.test(String(parametros.versao)) || parametros.versao > 2147483647) {
+                this.avisar('Registro sem identificação ou versão válida. Clique em Buscar para carregar o parâmetro salvo no servidor.', 'danger');
+                return null;
             }
+            return parametros;
+        },
 
-            gravacao.then(function (linha) {
+        definirGravando: function (gravando) {
+            this.gravando = gravando;
+            $('[data-confirmar-excluir], [data-fechar-excluir], [data-fechar-modal]', this.DOM).prop('disabled', gravando);
+            this.$formulario.find('.nwi-campo-input:not(.tt-hint), [type="submit"]').prop('disabled', gravando);
+            this.$modalCadastro.attr('aria-busy', gravando ? 'true' : 'false');
+            this.$modalExcluir.attr('aria-busy', gravando ? 'true' : 'false');
+            this.$modalExcluir.find('[data-excluir-botao-texto]').text(gravando ? 'Excluindo...' : 'Excluir');
+            if (this.linhaEditando) this.$modalCadastro.find('[data-modal-salvar]').text(gravando ? 'Salvando...' : 'Salvar alterações');
+            else this.$modalCadastro.find('[data-modal-salvar]').text(gravando ? 'Criando...' : 'Criar parametrização');
+        },
+
+        executarComandoParametro: function (parametros, acaoDataset) {
+            var self = this;
+            acaoDataset = acaoDataset || ACAO_ALTERAR_PARAMETRO;
+            var assinatura = acaoDataset + ':' + JSON.stringify(parametros);
+            if (!this.intencoesComando) this.intencoesComando = {};
+            try {
+                if (!this.intencoesComando[assinatura]) this.intencoesComando[assinatura] = gerarChaveIdempotente();
+            } catch (erro) {
+                return $.Deferred().resolve({ ok: false, mensagem: 'Não foi possível gerar a identificação do comando. Recarregue a página e tente novamente.' }).promise();
+            }
+            var parametrosComChave = $.extend({}, parametros, { chaveIdempotente: this.intencoesComando[assinatura] });
+
+            return chamarEmbalagens(acaoDataset, parametrosComChave).then(function (resultado) {
+                if (!resultado.sucesso) return {
+                    ok: false, codigoErro: resultado.codigoErro, incerto: resultadoComandoIncerto(resultado.codigoErro),
+                    mensagem: MENSAGENS_ERRO[resultado.codigoErro] || resultado.mensagem || 'O Datasul recusou a gravação.'
+                };
+                if (!fotografiaParametroValida(resultado, parametros, acaoDataset)) return { ok: false, incerto: true };
+                delete self.intencoesComando[assinatura];
+                return { ok: true, resultado: resultado };
+            }, function () {
+                return { ok: false, incerto: true };
+            }).then(function (saida) {
+                if (saida.incerto) saida.mensagem = 'Não foi possível confirmar a gravação. Clique em Buscar para conferir o registro antes de tentar novamente. Uma nova tentativa com os mesmos dados usará a mesma identificação do comando.';
+                return saida;
+            });
+        },
+
+        informarFalhaComando: function (saida, $modal) {
+            if ($modal) $modal.find('[data-cadastro-mensagem], [data-excluir-mensagem]').text(saida.mensagem);
+            this.avisar(saida.mensagem, saida.incerto ? 'warning' : 'danger');
+            if (saida.codigoErro === 'CONFLITO_VERSAO') {
+                if ($modal === this.$modalCadastro) this.fecharModalCadastro();
+                if ($modal === this.$modalExcluir) this.fecharModalExcluir();
+                this.carregarParametros(this.filtrosAplicados);
+            }
+        },
+
+        aplicarFotografiaParametro: function (linha, resultado, registro, mostrarLinha) {
+            var self = this;
+            // Buscar pode substituir as linhas enquanto o toggle aguarda a gravação.
+            if (this.tabela) linha = this.tabela.getRow(Number(resultado.idParam));
+            if (!linha || Number(linha.getData().versao) > Number(resultado.versao)) return $.Deferred().resolve().promise();
+            var anterior = registro || linha.getData();
+            var atualizado = converterParametroEmItem(resultado);
+            atualizado.estDescricao = atualizado.estDescricao || anterior.estDescricao;
+            atualizado.itemDescricao = atualizado.itemDescricao || anterior.itemDescricao;
+            atualizado.tipoDescricao = atualizado.tipoDescricao || (atualizado.tipoCodigo === anterior.tipoCodigo ? anterior.tipoDescricao : '');
+            return linha.update(atualizado).then(function () {
+                linha.reformat();
                 self.reaplicarOrdem();
-                self.destacarLinha(linha);
+                if (mostrarLinha !== false) self.mostrarPaginaDaLinha(linha);
+            }).then(null, function () {
+                self.avisar('Gravação confirmada. A lista será recarregada para mostrar o registro atualizado.', 'warning');
+                self.carregarParametros(self.filtrosAplicados);
+            });
+        },
+
+        gravarAlteracao: function (registro) {
+            var self = this;
+            var linha = this.linhaEditando;
+            var parametros = this.montarComandoParametro(linha.getData(), 'ALTERAR', { codTipo: registro.tipoCodigo, capacidade: registro.capacidade });
+            if (!parametros) return;
+            this.$modalCadastro.find('[data-cadastro-mensagem]').text('');
+            this.definirGravando(true);
+            this.executarComandoParametro(parametros).then(function (saida) {
+                self.definirGravando(false);
+                if (!saida.ok) { self.informarFalhaComando(saida, self.$modalCadastro); return; }
+                self.fecharModalCadastro();
+                self.aplicarFotografiaParametro(linha, saida.resultado, registro);
+                self.avisar(saida.resultado.repeticao ? 'Alteração já confirmada anteriormente.' : 'Parâmetro alterado.', 'success');
+            });
+        },
+
+        gravarRegistro: function (registro) {
+            if (this.gravando) return;
+            if (this.linhaEditando) { this.gravarAlteracao(registro); return; }
+            if (!this.tabela) { this.avisar('Aguarde o carregamento da tabela antes de criar o parâmetro.', 'warning'); return; }
+            var self = this;
+            var parametros = {
+                idParam: 0, codEstabel: registro.estCodigo, item: registro.itemCodigo,
+                codTipo: registro.tipoCodigo, capacidade: Number(registro.capacidade), unidade: registro.unidade,
+                ativo: true, versao: 0
+            };
+            this.$modalCadastro.find('[data-cadastro-mensagem]').text('');
+            this.definirGravando(true);
+            this.executarComandoParametro(parametros, ACAO_INCLUIR_PARAMETRO).then(function (saida) {
+                self.definirGravando(false);
+                if (!saida.ok) { self.informarFalhaComando(saida, self.$modalCadastro); return; }
+                self.fecharModalCadastro();
+                var existente = self.tabela.getRow(Number(saida.resultado.idParam));
+                if (existente) self.aplicarFotografiaParametro(existente, saida.resultado, registro);
+                else {
+                    var criado = converterParametroEmItem(saida.resultado);
+                    criado.estDescricao = criado.estDescricao || registro.estDescricao;
+                    criado.itemDescricao = criado.itemDescricao || registro.itemDescricao;
+                    criado.tipoDescricao = criado.tipoDescricao || registro.tipoDescricao;
+                    self.tabela.addRow(criado).then(function (linha) {
+                        self.reaplicarOrdem();
+                        self.mostrarPaginaDaLinha(linha);
+                    }).then(null, function () {
+                        self.avisar('Gravação confirmada. A lista será recarregada para mostrar o registro criado.', 'warning');
+                        self.carregarParametros(self.filtrosAplicados);
+                    });
+                }
+                self.avisar(saida.resultado.repeticao ? 'Inclusão já confirmada anteriormente.' : 'Parâmetro criado.', 'success');
             });
         },
 
@@ -1043,17 +1102,11 @@ var widget_nw_itensComCtrllDeEmb = (function () {
             if (ordem.length) this.tabela.setSort(ordem);
         },
 
-        // leva até a página da linha gravada e pisca em amarelo (se ela não estiver escondida pelo filtro)
-        destacarLinha: function (linha) {
+        // leva até a página da linha gravada, se ela não estiver escondida pelo filtro
+        mostrarPaginaDaLinha: function (linha) {
             var visivel = $.inArray(linha, this.tabela.getRows('active')) !== -1;
             if (!visivel) return;
-            linha.pageTo().then(function () {
-                var $linha = $(linha.getElement());
-                $linha.removeClass('nwi-linha-nova');
-                void $linha[0].offsetWidth; // reinicia a animação se a linha já estava piscando
-                $linha.addClass('nwi-linha-nova');
-                setTimeout(function () { $linha.removeClass('nwi-linha-nova'); }, DURACAO_DESTAQUE_LINHA_MS);
-            });
+            linha.pageTo();
         },
 
         // ---------- Confirmação de exclusão ----------
@@ -1061,6 +1114,9 @@ var widget_nw_itensComCtrllDeEmb = (function () {
         prepararModalExcluir: function () {
             var self = this;
             this.$modalExcluir = $('[data-modal-excluir]', this.DOM);
+            this.$modalExcluir.on('cancel', function (evento) {
+                if (self.gravando) evento.preventDefault();
+            });
             this.$modalExcluir.on('close', function () {
                 if (!self.$modalExcluir[0].open) self.linhaExcluindo = null;
             });
@@ -1070,26 +1126,44 @@ var widget_nw_itensComCtrllDeEmb = (function () {
         },
 
         abrirModalExcluir: function (linha) {
+            if (this.gravando) return;
             var modal = this.$modalExcluir[0];
             if (!modal || typeof modal.showModal !== 'function' || modal.open) return;
             var item = linha.getData();
             this.linhaExcluindo = linha;
-            this.$modalExcluir.find('[data-excluir-item]')
-                .text(formatarRotulo(item.itemCodigo, item.itemDescricao) + ' (' + item.estCodigo + ')');
+            this.$modalExcluir.find('[data-excluir-item]').text(formatarRotulo(item.itemCodigo, item.itemDescricao));
+            this.$modalExcluir.find('[data-excluir-estabelecimento]').text(formatarRotulo(item.estCodigo, item.estDescricao));
+            this.$modalExcluir.find('[data-excluir-unidade]').text(item.unidade || '—');
+            this.$modalExcluir.find('[data-excluir-tipo]').text(formatarRotulo(item.tipoCodigo, item.tipoDescricao));
+            this.$modalExcluir.find('[data-excluir-capacidade]').text(formatarCapacidade(item.capacidade));
+            this.$modalExcluir.find('[data-excluir-situacao]').text(item.ativo ? 'Ativo' : 'Inativo');
+            this.$modalExcluir.find('[data-excluir-mensagem]').text('');
             modal.showModal();
         },
 
         fecharModalExcluir: function () {
+            if (this.gravando) return;
             var modal = this.$modalExcluir[0];
             if (modal && modal.open) modal.close();
             this.linhaExcluindo = null;
         },
 
-        // MOCK: só remove da tabela da tela. Trocar pela exclusão no dataset/REST quando existir.
         confirmarExclusao: function () {
+            if (this.gravando) return;
+            var self = this;
             var linha = this.linhaExcluindo;
-            this.fecharModalExcluir();
-            if (linha) linha.delete();
+            if (!linha) return;
+            var parametros = this.montarComandoParametro(linha.getData(), 'EXCLUIR');
+            if (!parametros) return;
+            this.$modalExcluir.find('[data-excluir-mensagem]').text('');
+            this.definirGravando(true);
+            this.executarComandoParametro(parametros).then(function (saida) {
+                self.definirGravando(false);
+                if (!saida.ok) { self.informarFalhaComando(saida, self.$modalExcluir); return; }
+                self.fecharModalExcluir();
+                linha.delete().then(null, function () { self.carregarParametros(self.filtrosAplicados); });
+                self.avisar(saida.resultado.repeticao ? 'Exclusão já confirmada anteriormente.' : 'Parâmetro excluído.', 'success');
+            });
         }
     });
 })();

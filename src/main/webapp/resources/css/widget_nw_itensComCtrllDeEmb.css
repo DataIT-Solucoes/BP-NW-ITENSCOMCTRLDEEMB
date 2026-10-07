@@ -585,9 +585,10 @@
     height: 21px;
     border-radius: 11px;
     background-color: #9C9A90;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.26s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* o botão desliza com uma leve folga no fim do curso (sensação de encaixe) */
 .fluig-style-guide.nwi .nwi-switch-trilho::after {
     content: "";
     position: absolute;
@@ -598,7 +599,12 @@
     border-radius: 50%;
     background-color: #fff;
     box-shadow: 0 1px 3px rgba(32, 32, 30, 0.3);
-    transition: transform 0.2s ease;
+    transition: transform 0.26s cubic-bezier(0.34, 1.35, 0.64, 1), width 0.26s ease, box-shadow 0.26s ease;
+}
+
+/* enquanto o dedo/mouse está pressionado, o botão estica um pouco */
+.fluig-style-guide.nwi .nwi-switch:active .nwi-switch-trilho::after {
+    width: 21px;
 }
 
 .fluig-style-guide.nwi .nwi-switch input:checked + .nwi-switch-trilho {
@@ -609,13 +615,25 @@
     transform: translateX(17px);
 }
 
+/* esticado e à direita: anda menos para não passar da borda do trilho */
+.fluig-style-guide.nwi .nwi-switch:active input:checked + .nwi-switch-trilho::after {
+    transform: translateX(13px);
+}
+
 .fluig-style-guide.nwi .nwi-switch input:focus-visible + .nwi-switch-trilho {
     box-shadow: 0 0 0 3px rgba(0, 107, 53, 0.28);
 }
 
+/* o rótulo troca com um fade curto, em vez de piscar de uma palavra para a outra */
 .fluig-style-guide.nwi .nwi-switch-texto {
+    min-width: 46px;
     font-size: 13px;
     color: var(--nwi-tinta-suave);
+    transition: opacity 0.13s ease;
+}
+
+.fluig-style-guide.nwi .nwi-switch-texto.is-trocando {
+    opacity: 0;
 }
 
 /* ---------- Coluna Ações ---------- */
@@ -771,28 +789,10 @@
     padding: 20px 24px 8px;
 }
 
-/* aviso do topo do modal */
-.fluig-style-guide.nwi .nwi-nota {
-    margin: 0 0 20px;
-    padding: 12px 16px;
-    border-left: 3px solid var(--nwi-verde);
-    border-radius: 0 10px 10px 0;
-    background-color: var(--nwi-nevoa);
-    font-size: 13px;
-    line-height: 1.5;
-    color: var(--nwi-tinta);
-}
-
 .fluig-style-guide.nwi .nwi-modal-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 18px 20px;
-}
-
-.fluig-style-guide.nwi .nwi-campo-dica {
-    margin: 6px 0 0;
-    font-size: 13px;
-    color: var(--nwi-tinta-suave);
 }
 
 .fluig-style-guide.nwi .nwi-campo-erro {
@@ -950,7 +950,8 @@
     .fluig-style-guide.nwi .nwi-modal-fechar,
     .fluig-style-guide.nwi .nwi-acao,
     .fluig-style-guide.nwi .nwi-switch-trilho,
-    .fluig-style-guide.nwi .nwi-switch-trilho::after {
+    .fluig-style-guide.nwi .nwi-switch-trilho::after,
+    .fluig-style-guide.nwi .nwi-switch-texto {
         transition: none;
     }
 

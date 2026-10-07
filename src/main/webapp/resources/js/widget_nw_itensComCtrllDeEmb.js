@@ -379,6 +379,7 @@ var widget_nw_itensComCtrllDeEmb = SuperWidget.extend({
     montarSwitch(linha) {
         var self = this;
         var dados = linha.getData();
+        var pendente = null;
         var label = document.createElement('label');
         label.className = 'nwi-switch';
 
@@ -395,8 +396,13 @@ var widget_nw_itensComCtrllDeEmb = SuperWidget.extend({
         texto.textContent = dados.ativo ? 'Ativo' : 'Inativo';
 
         input.addEventListener('change', function () {
-            texto.textContent = input.checked ? 'Ativo' : 'Inativo';
-            linha.update({ ativo: input.checked });
+            self.trocarTextoSwitch(texto, input.checked ? 'Ativo' : 'Inativo');
+            //o update redesenha a célula e trocaria o switch por um novo no meio do caminho:
+            //esperar o fim da animação deixa o botão deslizar até o outro lado antes disso.
+            clearTimeout(pendente);
+            pendente = setTimeout(function () {
+                linha.update({ ativo: input.checked });
+            }, self.DURACAO_SWITCH);
         });
         //o clique no switch não deve selecionar/ordenar nada atrás dele
         label.addEventListener('click', function (event) { event.stopPropagation(); });
@@ -405,6 +411,19 @@ var widget_nw_itensComCtrllDeEmb = SuperWidget.extend({
         label.appendChild(trilho);
         label.appendChild(texto);
         return label;
+    },
+
+    //tempo da animação do switch no CSS (.nwi-switch-trilho), mais uma folga
+    DURACAO_SWITCH: 300,
+
+    //Ativo <-> Inativo com um fade curto no lugar da troca seca de palavra
+    trocarTextoSwitch(el, novo) {
+        if (el.textContent === novo) return;
+        el.classList.add('is-trocando');
+        setTimeout(function () {
+            el.textContent = novo;
+            el.classList.remove('is-trocando');
+        }, 130);
     },
 
     montarBotoesAcoes(dados) {

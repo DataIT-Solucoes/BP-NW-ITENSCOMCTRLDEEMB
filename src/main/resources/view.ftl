@@ -52,7 +52,7 @@
             </div>
         </div>
         <div class="nwi-filtros-acoes">
-            <button type="button" class="nwi-btn nwi-btn-contorno" data-buscar><i class="bi bi-search" aria-hidden="true"></i>Buscar</button>
+            <button type="button" class="nwi-btn nwi-btn-destaque" data-buscar><i class="bi bi-search" aria-hidden="true"></i>Buscar</button>
         </div>
     </div>
     <div class="nwi-tabela" data-tabela></div>

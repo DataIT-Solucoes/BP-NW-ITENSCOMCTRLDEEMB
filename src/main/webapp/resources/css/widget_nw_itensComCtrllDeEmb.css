@@ -159,6 +159,7 @@
 /* o botão Buscar alinha pela altura do campo, não pela da dica */
 .fluig-style-guide.nwi .nwi-filtros-acoes {
     display: flex;
+    align-self: start;
     gap: 10px;
     margin-top: 25px;
 }
@@ -395,7 +396,7 @@
     transform: translateY(1px);
 }
 
-/* Novo / Salvar: ação principal (verde institucional, texto branco) */
+/* Novo / Buscar / Salvar: ação principal (verde institucional, texto branco) */
 .fluig-style-guide.nwi .nwi-btn-destaque {
     background-color: var(--nwi-verde);
     color: #fff;
@@ -405,7 +406,7 @@
     background-color: var(--nwi-verde-escuro);
 }
 
-/* Buscar / Cancelar: contorno verde, ganha fundo verde névoa no hover */
+/* Cancelar: contorno verde, ganha fundo verde névoa no hover */
 .fluig-style-guide.nwi .nwi-btn-contorno {
     border-color: var(--nwi-verde);
     background-color: #fff;

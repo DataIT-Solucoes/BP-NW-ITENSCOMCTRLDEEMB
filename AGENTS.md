@@ -21,7 +21,7 @@ Base funcional: aba "Itens Controlados" do protótipo `https://humcode.com.br/mo
 Tela montada com **dados mockados**; nenhuma chamada a dataset ou REST.
 - `view.ftl`: cabeçalho + aba única "Itens Controlados" + filtros + tabela + 2 `<dialog>` (cadastro e exclusão).
 - `widget_nw_itensComCtrllDeEmb.js`: SuperWidget com Tabulator 6.4.0 (CDN), autocompletes próprios,
-  filtros, cadastro/edição, exclusão e switch de situação — tudo sobre `NWI_DADOS_MOCK` / `NWI_FONTES`.
+  filtros, cadastro/edição, exclusão e switch de situação — tudo sobre `ITENS_CONTROLADOS_MOCK` / `OPCOES_APOIO_MOCK`.
 - `widget_nw_itensComCtrllDeEmb.css`: paleta Branco Peres sob `.fluig-style-guide.nwi`.
 - `edit.ftl`: card de identificação.
 
@@ -72,7 +72,7 @@ Nenhum.
 - Conversão de unidade: pertence ao salvamento (regra ainda não especificada).
 
 ## Pendências / decisões em aberto
-- Trocar os mocks (`NWI_DADOS_MOCK`, `NWI_FONTES`) pelos datasets/serviços REST quando existirem.
+- Trocar os mocks (`ITENS_CONTROLADOS_MOCK`, `OPCOES_APOIO_MOCK`) pelos datasets/serviços REST quando existirem.
 - Definir se a troca do switch de situação grava na hora (PATCH) ou só no salvar.
 - Regra de conversão de unidade no salvamento.
 - Quebras de linha: os arquivos deste widget estão em **LF** (como a extensão gerou);

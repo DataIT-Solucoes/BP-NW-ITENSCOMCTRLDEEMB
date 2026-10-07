@@ -269,6 +269,105 @@
     pointer-events: none;
 }
 
+/* ---------- Select2 (Situação) no mesmo visual dos outros campos ---------- */
+.fluig-style-guide.nwi .nwi-campo-caixa-select.is-select2::after {
+    display: none;
+}
+
+.fluig-style-guide.nwi .select2-container--default .select2-selection--single {
+    box-sizing: border-box;
+    height: 44px;
+    border: 1px solid var(--nwi-borda-campo);
+    border-radius: 10px;
+    background-color: #fff;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.fluig-style-guide.nwi .select2-container--default .select2-selection--single:hover {
+    border-color: #B5B3A9;
+}
+
+.fluig-style-guide.nwi .select2-container--default.select2-container--focus .select2-selection--single {
+    border-color: var(--nwi-verde);
+    box-shadow: 0 0 0 3px rgba(0, 107, 53, 0.18);
+}
+
+/* aberto: campo e lista viram uma peça só (sem sombra entre os dois, cantos retos na emenda) */
+.fluig-style-guide.nwi .select2-container--default.select2-container--open .select2-selection--single {
+    border-color: var(--nwi-verde);
+    box-shadow: none;
+}
+
+.fluig-style-guide.nwi .select2-container--default.select2-container--open.select2-container--below .select2-selection--single {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.fluig-style-guide.nwi .select2-container--default.select2-container--open.select2-container--above .select2-selection--single {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+
+.fluig-style-guide.nwi .select2-container--default .select2-selection--single .select2-selection__rendered {
+    padding: 0 38px 0 14px;
+    font-size: 15px;
+    line-height: 42px;
+    color: var(--nwi-tinta);
+}
+
+.fluig-style-guide.nwi .select2-container--default .select2-selection--single .select2-selection__arrow {
+    top: 0;
+    right: 8px;
+    width: 24px;
+    height: 42px;
+}
+
+.fluig-style-guide.nwi .select2-container--default .select2-selection--single .select2-selection__arrow b {
+    margin-left: -5px;
+    margin-top: -3px;
+    border-width: 6px 5px 0;
+    border-color: var(--nwi-tinta-suave) transparent transparent;
+}
+
+.fluig-style-guide.nwi .select2-container--default.select2-container--open .select2-selection--single .select2-selection__arrow b {
+    border-width: 0 5px 6px;
+    border-color: transparent transparent var(--nwi-tinta-suave);
+}
+
+/* lista aberta, grudada no campo: sem a borda da emenda e com os cantos arredondados só do lado de fora */
+.fluig-style-guide.nwi .select2-dropdown {
+    overflow: hidden;
+    border: 1px solid var(--nwi-verde);
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--nwi-tinta);
+}
+
+.fluig-style-guide.nwi .select2-dropdown--below {
+    border-top: 0;
+    border-radius: 0 0 10px 10px;
+}
+
+.fluig-style-guide.nwi .select2-dropdown--above {
+    border-bottom: 0;
+    border-radius: 10px 10px 0 0;
+}
+
+.fluig-style-guide.nwi .select2-results__option {
+    padding: 8px 14px;
+}
+
+.fluig-style-guide.nwi .select2-container--default .select2-results__option[aria-selected=true] {
+    background-color: #F3F7F2;
+    font-weight: 700;
+}
+
+.fluig-style-guide.nwi .select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background-color: var(--nwi-nevoa);
+    color: var(--nwi-tinta);
+}
+
 /* ---------- Autocomplete Fluig (Tipo de Embalagem) ---------- */
 /* O typeahead embrulha o input num <span> e pode aplicar fundo próprio: o branco e a largura do campo são reafirmados. */
 .fluig-style-guide.nwi .nwi-campo-caixa .fluig-typeahead,
@@ -987,6 +1086,7 @@
     .fluig-style-guide.nwi .nwi-tabs-indicador,
     .fluig-style-guide.nwi .nwi-campo-caixa > i,
     .fluig-style-guide.nwi .nwi-campo-input,
+    .fluig-style-guide.nwi .select2-container--default .select2-selection--single,
     .fluig-style-guide.nwi .nwi-btn,
     .fluig-style-guide.nwi .nwi-modal-fechar,
     .fluig-style-guide.nwi .nwi-acao,

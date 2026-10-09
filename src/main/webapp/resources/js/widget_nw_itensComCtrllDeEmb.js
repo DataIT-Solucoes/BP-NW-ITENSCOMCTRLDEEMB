@@ -272,6 +272,7 @@ var widget_nw_itensComCtrllDeEmb = (function () {
                 acao: ACAO_APOIAR_ESTABELECIMENTOS,
                 nomeDoApoio: 'os estabelecimentos',
                 atraso: ATRASO_CONSULTA_APOIO_MS,
+                comBadge: true,
                 montarParametros: function (termo) {
                     return { filtro: termo, limite: LIMITE_SUGESTOES };
                 }
@@ -282,6 +283,7 @@ var widget_nw_itensComCtrllDeEmb = (function () {
                 acao: ACAO_APOIAR_ITENS,
                 nomeDoApoio: 'os itens',
                 atraso: ATRASO_CONSULTA_APOIO_MS,
+                comBadge: true,
                 montarParametros: function (termo) {
                     var parametros = { filtro: termo, limite: LIMITE_SUGESTOES };
                     var codigoEstabelecimento = $estabelecimento.data('codigo');
@@ -295,6 +297,7 @@ var widget_nw_itensComCtrllDeEmb = (function () {
                 acao: ACAO_CONSULTAR_TIPOS_APOIO,
                 nomeDoApoio: 'os tipos de embalagem',
                 atraso: ATRASO_CONSULTA_TIPOS_MS,
+                comBadge: true,
                 montarParametros: function (termo) {
                     return { filtro: termo, ativo: TODOS, limite: LIMITE_SUGESTOES };
                 }
@@ -354,6 +357,7 @@ var widget_nw_itensComCtrllDeEmb = (function () {
         //   montarParametros  recebe o termo digitado e devolve os parâmetros da ação (null = ainda não pode consultar)
         //   aoMudarSelecao    opcional; chamado quando a escolha é trocada ou apagada
         //   aoSelecionar      opcional; recebe o registro escolhido depois de armazená-lo no campo
+        //   comBadge          opcional; mostra a escolha como badge dentro do campo, com botão para remover
         prepararAutocompleteApoio: function ($campo, configuracao) {
             var self = this;
             var buscaApoio = { sequencia: 0, temporizador: null, consulta: null, configuracao: configuracao };
@@ -382,6 +386,7 @@ var widget_nw_itensComCtrllDeEmb = (function () {
                 self.cancelarConsultaApoio(buscaApoio);
                 if (configuracao.aoSelecionar) configuracao.aoSelecionar(registro);
                 if ($campo.attr('name')) self.marcarErro($campo.attr('name'), '');
+                if (configuracao.comBadge) self.mostrarSelecionado($campo, registro, autocomplete);
             });
 
             autocomplete = FLUIGC.autocomplete($campo, {
@@ -404,6 +409,52 @@ var widget_nw_itensComCtrllDeEmb = (function () {
                 }
             });
             return autocomplete;
+        },
+
+        // ---------- Badge da escolha (filtros) ----------
+
+        // O campo continua no lugar (com o texto escondido) e trava; a badge fica por cima dele.
+        mostrarSelecionado: function ($campo, registro, autocomplete) {
+            var self = this;
+            var $badge = $campo.data('badgeSelecionado');
+            if (!$badge) {
+                $badge = $('<span>', { 'class': 'nwi-selecionado', hidden: true })
+                    .append($('<span>', { 'class': 'nwi-selecionado-chip' })
+                        .append($('<span>', { 'class': 'nwi-selecionado-texto' })
+                            .append($('<span>', { 'class': 'nwi-selecionado-codigo' }))
+                            .append($('<span>', { 'class': 'nwi-selecionado-descricao' })))
+                        .append($('<button>', { type: 'button', 'class': 'nwi-selecionado-remover' })
+                            .append($('<i>', { 'class': 'bi bi-x', 'aria-hidden': 'true' }))
+                            .on('click.nwiApoio', function () { self.removerSelecionado($campo, autocomplete); })))
+                    .appendTo($campo.closest('.nwi-campo-caixa'));
+                $campo.data('badgeSelecionado', $badge);
+            }
+
+            var rotulo = formatarRotulo(registro.codigo, registro.descricao);
+            $badge.find('.nwi-selecionado-codigo').text(registro.codigo);
+            $badge.find('.nwi-selecionado-descricao').text(registro.descricao ? ' — ' + registro.descricao : '');
+            $badge.find('.nwi-selecionado-chip').attr('title', rotulo);
+            $badge.find('.nwi-selecionado-remover').attr({ title: 'Remover', 'aria-label': 'Remover ' + rotulo });
+
+            if (autocomplete) autocomplete.close();
+            $campo.addClass('is-selecionado').prop('readOnly', true);
+            $badge.prop('hidden', false);
+            $badge.find('.nwi-selecionado-remover').trigger('focus');
+        },
+
+        removerSelecionado: function ($campo, autocomplete) {
+            var $badge = $campo.data('badgeSelecionado');
+            if ($badge) $badge.prop('hidden', true);
+            $campo.removeClass('is-selecionado').prop('readOnly', false)
+                .removeData('codigo').removeData('registro');
+            if (autocomplete) autocomplete.val('');
+            else $campo.val('');
+            var buscaApoio = $campo.data('buscaApoio');
+            if (buscaApoio) {
+                this.cancelarConsultaApoio(buscaApoio);
+                if (buscaApoio.configuracao.aoMudarSelecao) buscaApoio.configuracao.aoMudarSelecao();
+            }
+            $campo.trigger('focus');
         },
 
         // descarta a consulta em andamento (e as respostas que ainda chegarem dela)

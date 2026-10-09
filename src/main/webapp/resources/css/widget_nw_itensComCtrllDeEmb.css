@@ -410,6 +410,100 @@
     color: var(--nwi-tinta);
 }
 
+/* ---------- Badge da escolha nos filtros ---------- */
+/* O campo fica no lugar (mantém borda e ícone), com o texto escondido; a badge fica por cima dele. */
+.fluig-style-guide.nwi .nwi-campo-caixa .nwi-campo-input.is-selecionado,
+.fluig-style-guide.nwi .nwi-campo-caixa .nwi-campo-input.is-selecionado:hover {
+    border-color: var(--nwi-verde);
+    background-color: #fff !important;
+    color: transparent;
+    cursor: default;
+}
+
+.fluig-style-guide.nwi .nwi-selecionado {
+    position: absolute;
+    z-index: 3;
+    top: 0;
+    left: 36px;
+    right: 8px;
+    display: flex;
+    align-items: center;
+    height: 44px;
+    min-width: 0;
+    pointer-events: none;
+}
+
+.fluig-style-guide.nwi .nwi-selecionado[hidden] {
+    display: none;
+}
+
+.fluig-style-guide.nwi .nwi-selecionado-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 2px 2px 2px 8px;
+    border: 1px solid var(--nwi-verde);
+    border-radius: 999px;
+    background-color: var(--nwi-nevoa);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.4;
+    color: var(--nwi-tinta);
+    pointer-events: auto;
+}
+
+.fluig-style-guide.nwi .nwi-selecionado-texto {
+    display: flex;
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.fluig-style-guide.nwi .nwi-selecionado-codigo {
+    flex: 0 0 auto;
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.fluig-style-guide.nwi .nwi-selecionado-descricao {
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 600;
+}
+
+.fluig-style-guide.nwi .nwi-selecionado-remover {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    font-size: 14px;
+    color: var(--nwi-tinta-suave);
+    cursor: pointer;
+}
+
+.fluig-style-guide.nwi .nwi-selecionado-remover:hover {
+    background-color: rgba(0, 107, 53, 0.12);
+    color: var(--nwi-tinta);
+}
+
+.fluig-style-guide.nwi .nwi-selecionado-remover:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 107, 53, 0.28);
+}
+
 /* ---------- Autocomplete próprio (Estabelecimento e Item) ---------- */
 .fluig-style-guide.nwi .nwi-sugestoes {
     position: absolute;

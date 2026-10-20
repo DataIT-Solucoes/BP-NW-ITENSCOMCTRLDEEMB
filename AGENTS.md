@@ -1,84 +1,50 @@
 # widget_nw_itensComCtrllDeEmb
 
-> Regras gerais (versões, SuperWidget, Style Guide): `AGENTS.md` da raiz do repositório. Aqui fica só o que é deste widget.
-> Preencher só com o que o usuário informou ou o que está nos fontes. O que não se sabe fica "a definir".
+## Leitura inicial
+- Ler este arquivo e os quatro arquivos `contexto-ia/AI_*.md` no início da sessão.
+- Visão geral para desenvolvedores: [README.md](README.md).
+- Ao concluir uma tarefa, atualizar o contexto afetado e manter o README coerente; não modificar documentos sem informação nova.
+- Regras gerais existentes: `../../../CLAUDE.md`. O AGENTS da raiz citado anteriormente não foi encontrado nesta migração.
+- Não há CLAUDE local duplicado. Se a ferramenta não carregar AGENTS automaticamente, orientar a leitura explícita dele e dos arquivos de contexto.
 
 ## Objetivo
-Tela de **Itens Controlados**: cadastro, edição, exclusão e consulta da parametrização
-estabelecimento + item + tipo de embalagem + capacidade, com situação Ativo/Inativo.
-Base visual: mesma paleta e mesmo layout do `widget_nw_embalagens` (prefixo de classe aqui: `nwi`).
-Base funcional: aba "Itens Controlados" do protótipo `https://humcode.com.br/mockup-fluig.html`
-(mesmos campos; o botão **Limpar** do protótipo foi retirado por decisão do usuário).
+Tela de **Itens Controlados**: cadastro, edição, exclusão e consulta da parametrização estabelecimento + item + tipo de embalagem + capacidade, com situação Ativo/Inativo.
+Base visual: paleta e layout do `widget_nw_embalagens`, prefixo `nwi`. Base funcional histórica: aba Itens Controlados do protótipo `https://humcode.com.br/mockup-fluig.html`, sem botão Limpar por decisão do usuário. Protótipo não consultado nesta migração.
 
 ## Identificação
-- `application.code`: `widget_nw_itensComCtrllDeEmb`
-- Título (`application.title`): `widget_nw_itensComCtrllDeEmb` (valor gerado pela extensão)
-- Versão: `0.1.0` · categoria `SYSTEM` · `application.uiwidget=true` · `application.mobileapp=false`
-- Context-root: `/widget_nw_itensComCtrllDeEmb`
-- Onde é usado (página/comunidade do Fluig): a definir
+- `application.code` e `application.title`: `widget_nw_itensComCtrllDeEmb`.
+- Versão: `0.1.0`; categoria `SYSTEM`; `application.uiwidget=true`; `application.mobileapp=false`.
+- Context-root: `/widget_nw_itensComCtrllDeEmb`.
+- Repositório local: esta pasta em `brancoperes2026/wcm/widget/`.
+- Página/comunidade de uso: a definir.
 
-## Estado atual (2026-10-07)
-A tabela é carregada ao abrir a tela pelo dataset `dsNwEmbalagens` (ação `consultarParametros`, com bolinha de carregamento).
-Os filtros Estabelecimento, Item e Tipo de Embalagem são autocomplete do Fluig (`apoiarEstabelecimentos`, `apoiarItens`, `consultarTiposApoio`).
-Ainda são mock: Estabelecimento e Item do modal (`OPCOES_APOIO_MOCK`) e as gravações (cadastro, edição, exclusão, switch), que só alteram a tabela da tela.
-- `view.ftl`: cabeçalho + aba única "Itens Controlados" + filtros + tabela + 2 `<dialog>` (cadastro e exclusão).
-- `widget_nw_itensComCtrllDeEmb.js`: SuperWidget com Tabulator 6.4.0 (CDN), autocompletes próprios,
-  filtros, cadastro/edição, exclusão e switch de situação.
-- `widget_nw_itensComCtrllDeEmb.css`: paleta Branco Peres sob `.fluig-style-guide.nwi`.
-- `edit.ftl`: card de identificação.
+## Arquitetura e integrações
+- `src/main/resources/view.ftl`: cabeçalho, aba Única, filtros, tabela e dois diálogos nativos.
+- `src/main/webapp/resources/js/widget_nw_itensComCtrllDeEmb.js`: SuperWidget, Tabulator, FLUIGC.autocomplete e chamadas ao dataset `dsNwEmbalagens` por `/api/public/ecm/dataset/search`.
+- Ações chamadas no código: `consultarParametros`, `apoiarEstabelecimentos`, `apoiarItens`, `consultarTiposApoio`, `incluirParametro`, `alterarParametro`. Presença no fonte não comprova execução ou liberação no Fluig.
+- Fonte da verdade do contrato e permissões: `../widget_nw_embalagens/datasets/dsNwEmbalagens.js`. Conferir o arquivo atual antes de alterar integrações; não editar o dataset sem pedido.
+- Estrutura, recursos e configuração: README. Descobertas e limites: AI_REFERENCES.
 
-## Tela
-### Filtros (sem botão Limpar)
-Estabelecimento, Item, Tipo de Embalagem (autocomplete, 2+ caracteres, busca por código OU descrição)
-e Situação (Todos/Ativo/Inativo). Ação: **Buscar**. O botão **Novo item controlado** fica no cabeçalho.
+## Regras de trabalho
+- Português do Brasil, direto. O usuário define o escopo. Pendência registrada não autoriza execução; não abrir levantamentos, refatorações ou documentação adicional sem pedido.
+- Respeitar as instruções gerais do projeto e as instruções atuais do usuário. Usar a skill `fluig-branco-peres` para este widget.
+- Sempre realizar commit, push e compilação ao concluir uma entrega, por autorização permanente do usuário em 2026-10-20. Mostrar antes o conteúdo do commit. Esta regra substitui a exigência anterior de pedido a cada entrega. Nunca incluir pastas de referência, como `srv/` e `em_homologacao/`, nem alterações preexistentes fora do escopo.
+- Compilação desta widget: gerar o WAR em `target/`, com `src/main/webapp/` na raiz e `src/main/resources/` em `WEB-INF/classes/`. Conferir entradas e conteúdo contra os fontes. Publicação no Fluig depende de pedido. Distinguir verificação local de validação no Fluig; marcar como “não confirmado” o que não foi visto. Preferir hash, contagem e diff a afirmações sem evidência.
+- Cópias do servidor/homologação são somente leitura. Nunca ler `.r`. Não fazer varreduras amplas fora do projeto sem perguntar; se faltar arquivo, pedir ao usuário.
+- Progress/Datasul (`.w/.p/.i/.cls`): usar a skill `progress-datasul` e ler `references/manutencao-e-contexto.md` antes de editar. Fontes CP850 + CRLF: nunca usar Write/Edit neles.
+- Não inventar dataset, campo, serviço ou regra de negócio. O desconhecido fica “a definir”. Nunca armazenar credenciais.
+- Medir e preservar encoding e quebras de linha dos arquivos editados. Não normalizar o widget inteiro sem decisão do usuário.
+- Ambiente registrado: jQuery 3.6.3, Bootstrap 3.4.1 e Style Guide 2.5.0, fornecidos pelo Fluig; não carregar outra cópia. JavaScript novo/alterado deve usar jQuery; escopar por `this.DOM`/`instanceId` e CSS por `.fluig-style-guide.nwi`.
 
-### Tabela
-Estabelecimento | Item | Unidade | Tipo de Embalagem | Capacidade | Situação | Ações
-- Estabelecimento/Item/Tipo exibidos como `código — descrição`; Unidade como chip; Capacidade com 4 casas (pt-BR).
-- Situação: switch Ativo/Inativo na própria linha.
-- Ações: Editar e Excluir (Excluir abre confirmação).
-- Paginação de 10 com contador "Mostrando X–Y de N".
-
-### Modal Novo/Editar
-Aviso: "Estabelecimento e item ficam imutáveis na edição. A unidade vem do item; a conversão pertence ao salvamento."
-Campos: Estabelecimento, Item (autocomplete) · Unidade (readonly, vem do item) · Tipo de Embalagem (autocomplete) ·
-Capacidade (number, min/step 0,0001). Na edição, Estabelecimento e Item ficam `readonly`.
-Botão: "Criar parametrização" (novo) / "Salvar alterações" (edição).
-
-## Recursos declarados no `application.info`
-| Índice | Tipo | Valor |
-|---|---|---|
-| 1 | js | `/resources/js/widget_nw_itensComCtrllDeEmb.js` |
-| 2 | css | `/resources/css/widget_nw_itensComCtrllDeEmb.css` |
-
-Próximo índice livre: 3
-
-Recursos externos carregados pelo `view.ftl` (CDN): Bootstrap Icons 1.11.3, fonte Mulish (Google Fonts),
-Tabulator 6.4.0 (CSS no `view.ftl`, JS injetado pelo script).
-
-## Dados
-- Dataset: `dsNwEmbalagens` (fonte em `widget_nw_embalagens/datasets/`); a liberação por grupo/estabelecimento fica em `NW_CONFIG.regras` desse arquivo.
-  Ações usadas: `consultarParametros`, `apoiarEstabelecimentos`, `apoiarItens`, `consultarTiposApoio`.
-- Serviços REST: a definir. Contratos citados no mapa técnico do protótipo (ainda não implementados):
-  `consultarEstabelecimentos` · GET /apoios/estabelecimentos; `consultarItens` · GET /apoios/itens;
-  `consultarParametros` · GET /parametros; `salvarParametro` · POST/PATCH /parametros.
-- Campos do registro no JS: `id`, `estCodigo`, `estDescricao`, `itemCodigo`, `itemDescricao`,
-  `unidade`, `tipoCodigo`, `tipoDescricao`, `capacidade`, `ativo`, `versao`.
-  O `consultarParametros` devolve só códigos: as descrições (`estDescricao`, `itemDescricao`, `tipoDescricao`) vêm vazias e as colunas mostram só o código.
-
-## Parâmetros de configuração (`edit.ftl`)
-Nenhum.
-
-## Regras de negócio
+## Regras de negócio preservadas
+- Sem botão Limpar nos filtros.
 - Estabelecimento e item não mudam na edição.
-- A unidade é a do item, não é digitada.
-- Capacidade maior que zero, com até 4 casas decimais.
-- Conversão de unidade: pertence ao salvamento (regra ainda não especificada).
+- Unidade vem do item, sem digitação manual.
+- Capacidade maior que zero, com até quatro casas decimais.
+- Conversão de unidade pertence ao salvamento; regra a definir.
 
-## Pendências / decisões em aberto
-- Trocar o que ainda é mock (`OPCOES_APOIO_MOCK` do modal e as gravações) pelos datasets/serviços REST quando existirem.
-- Definir de onde vêm as descrições de estabelecimento, item e tipo na tabela (o `consultarParametros` só traz códigos).
-- Definir se a troca do switch de situação grava na hora (PATCH) ou só no salvar.
-- Regra de conversão de unidade no salvamento.
-- Quebras de linha: os arquivos deste widget estão em **LF** (como a extensão gerou);
-  o `widget_nw_embalagens` está em CRLF. Decidir se normaliza o widget inteiro para CRLF.
+## Continuidade
+- Estado e retomada: [AI_HANDOFF.md](contexto-ia/AI_HANDOFF.md).
+- Decisões aprovadas: [AI_DECISIONS.md](contexto-ia/AI_DECISIONS.md).
+- Pendências: [AI_TODO.md](contexto-ia/AI_TODO.md).
+- Referências: [AI_REFERENCES.md](contexto-ia/AI_REFERENCES.md).

@@ -40,8 +40,6 @@ Campos internos: `id`, `estCodigo`, `estDescricao`, `itemCodigo`, `itemDescricao
 Antes de alterar integração, conferir o dataset atual em `../widget_nw_embalagens/datasets/dsNwEmbalagens.js`, incluindo NW_CONFIG, NW_ACOES e NW_COLUNAS. Contrato, permissões e escrita no ambiente não foram auditados nesta migração. A execução no Fluig não está confirmada.
 
 ## Verificação e continuidade
-Começar por [AGENTS.md](AGENTS.md) e os quatro arquivos de [contexto-ia](contexto-ia/AI_HANDOFF.md). Estado, decisões, pendências e referências ficam separados ali.
+Começar por [AGENTS.md](AGENTS.md); decisões, pendências, referências do backend e mapa do código ficam em [docs/](docs/). Histórico: `git log`.
 
-Revisão documental: `git diff --check`, `git diff --stat` e `git status --short`, incluindo inspeção dos documentos novos não rastreados. Evidências da entrega no HANDOFF.
-
-Por autorização permanente do usuário, concluir entregas com commit, push e compilação. Esta widget não tem pom.xml ou script de build: gerar `target/widget_nw_itensComCtrllDeEmb.war` como arquivo ZIP, com os arquivos de `src/main/webapp/` na raiz e os de `src/main/resources/` em `WEB-INF/classes/`, conforme a estrutura do WAR preexistente. Conferir as 12 entradas e seus bytes contra os fontes. Não há fontes Java nesta widget. `target/` está ignorado pelo Git. Publicação no Fluig depende de pedido; página/comunidade e responsável: a definir.
+Por autorização permanente do usuário, concluir entregas com commit, push e compilação, numa chamada só: `scripts/entregar.ps1` (confere BOM/quebra de linha, `node --check`, gera `target/widget_nw_itensComCtrllDeEmb.war`, commit e push). O `.war` tem `src/main/webapp/` na raiz e `src/main/resources/` em `WEB-INF/classes/`; não há fontes Java. `target/` está ignorado pelo Git. Publicação no Fluig depende de pedido; página/comunidade e responsável: a definir.

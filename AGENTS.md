@@ -1,50 +1,70 @@
 # widget_nw_itensComCtrllDeEmb
 
-## Leitura inicial
-- Ler este arquivo e os quatro arquivos `contexto-ia/AI_*.md` no início da sessão.
-- Visão geral para desenvolvedores: [README.md](README.md).
-- Ao concluir uma tarefa, atualizar o contexto afetado e manter o README coerente; não modificar documentos sem informação nova.
-- Regras gerais existentes: `../../../CLAUDE.md`. O AGENTS da raiz citado anteriormente não foi encontrado nesta migração.
-- Não há CLAUDE local duplicado. Se a ferramenta não carregar AGENTS automaticamente, orientar a leitura explícita dele e dos arquivos de contexto.
+> Regras gerais (versões, SuperWidget, Style Guide, padrão `nw`): `CLAUDE.md` da raiz do repositório. Aqui fica só o que é deste widget.
+> Preencher só com o que o usuário informou ou o que está nos fontes. O que não se sabe fica "a definir".
+> O `CLAUDE.md` desta pasta só importa este arquivo (`@AGENTS.md`). Skill local: `.claude/skills/fluig-branco-peres/`.
+
+## Onde está cada coisa (ler só o do assunto)
+| Arquivo | Conteúdo |
+|---|---|
+| `docs/decisoes.md` | Decisões e correções do usuário (dados, tela, forma de trabalho). **Ler antes de mudar comportamento ou texto.** |
+| `docs/pendencias.md` | Perguntas em aberto, propostas não aprovadas e o que falta confirmar no Fluig de TESTE |
+| `docs/referencias-backend.md` | Contrato do Dataset (ações, parâmetros, campos), fontes da verdade, códigos de erro |
+| `docs/tela-e-codigo.md` | Tela, modais e colunas; arquitetura e **mapa das funções do JS** (achar pelo mapa + Grep). O fonte manda |
+| `BADGE_FILTROS.md` | Receita do badge dentro dos campos de filtro (arquivo do usuário, fora do git) |
+| `README.md` | Visão geral para pessoas (GitHub). **Não precisa ler para trabalhar** |
+
+Histórico e estado do trabalho: `git log`.
 
 ## Objetivo
-Tela de **Itens Controlados**: cadastro, edição, exclusão e consulta da parametrização estabelecimento + item + tipo de embalagem + capacidade, com situação Ativo/Inativo.
-Base visual: paleta e layout do `widget_nw_embalagens`, prefixo `nwi`. Base funcional histórica: aba Itens Controlados do protótipo `https://humcode.com.br/mockup-fluig.html`, sem botão Limpar por decisão do usuário. Protótipo não consultado nesta migração.
+Tela de **Itens Controlados**: cadastro, edição, exclusão e consulta da parametrização estabelecimento + item + tipo de embalagem +
+capacidade, com situação Ativo/Inativo.
 
 ## Identificação
-- `application.code` e `application.title`: `widget_nw_itensComCtrllDeEmb`.
-- Versão: `0.1.0`; categoria `SYSTEM`; `application.uiwidget=true`; `application.mobileapp=false`.
-- Context-root: `/widget_nw_itensComCtrllDeEmb`.
-- Repositório local: esta pasta em `brancoperes2026/wcm/widget/`.
-- Página/comunidade de uso: a definir.
+- `application.code` e `application.title`: `widget_nw_itensComCtrllDeEmb`
+- Prefixo de classe CSS: `nwi` (container `.fluig-style-guide.nwi`)
+- Padrão visual: o mesmo de `widget_nw_embalagens` (paleta, cabeçalho, abas, botões)
+- Onde é usado (página/comunidade do Fluig): a definir
+- Repositório: `https://github.com/HumbertoAlcantaraArruda/BP-WIDGET-ITENSCOMCTRLDEEMB`, branch **`master`**.
 
-## Arquitetura e integrações
-- `src/main/resources/view.ftl`: cabeçalho, aba Única, filtros, tabela e dois diálogos nativos.
-- `src/main/webapp/resources/js/widget_nw_itensComCtrllDeEmb.js`: SuperWidget, Tabulator, FLUIGC.autocomplete e chamadas ao dataset `dsNwEmbalagens` por `/api/public/ecm/dataset/search`.
-- Ações chamadas no código: `consultarParametros`, `apoiarEstabelecimentos`, `apoiarItens`, `consultarTiposApoio`, `incluirParametro`, `alterarParametro`. Presença no fonte não comprova execução ou liberação no Fluig.
-- Fonte da verdade do contrato e permissões: `../widget_nw_embalagens/datasets/dsNwEmbalagens.js`. Conferir o arquivo atual antes de alterar integrações; não editar o dataset sem pedido.
-- Estrutura, recursos e configuração: README. Descobertas e limites: AI_REFERENCES.
+## Recursos declarados no `application.info`
+| Índice | Tipo | Valor |
+|---|---|---|
+| 1 | js | `/resources/js/widget_nw_itensComCtrllDeEmb.js` |
+| 2 | css | `/resources/css/widget_nw_itensComCtrllDeEmb.css` |
 
-## Regras de trabalho
-- Português do Brasil, direto. O usuário define o escopo. Pendência registrada não autoriza execução; não abrir levantamentos, refatorações ou documentação adicional sem pedido.
-- Respeitar as instruções gerais do projeto e as instruções atuais do usuário. Usar a skill `fluig-branco-peres` para este widget.
-- Sempre realizar commit, push e compilação ao concluir uma entrega, por autorização permanente do usuário em 2026-10-20. Mostrar antes o conteúdo do commit. Esta regra substitui a exigência anterior de pedido a cada entrega. Nunca incluir pastas de referência, como `srv/` e `em_homologacao/`, nem alterações preexistentes fora do escopo.
-- Compilação desta widget: gerar o WAR em `target/`, com `src/main/webapp/` na raiz e `src/main/resources/` em `WEB-INF/classes/`. Conferir entradas e conteúdo contra os fontes. Publicação no Fluig depende de pedido. Distinguir verificação local de validação no Fluig; marcar como “não confirmado” o que não foi visto. Preferir hash, contagem e diff a afirmações sem evidência.
-- Cópias do servidor/homologação são somente leitura. Nunca ler `.r`. Não fazer varreduras amplas fora do projeto sem perguntar; se faltar arquivo, pedir ao usuário.
-- Progress/Datasul (`.w/.p/.i/.cls`): usar a skill `progress-datasul` e ler `references/manutencao-e-contexto.md` antes de editar. Fontes CP850 + CRLF: nunca usar Write/Edit neles.
-- Não inventar dataset, campo, serviço ou regra de negócio. O desconhecido fica “a definir”. Nunca armazenar credenciais.
-- Medir e preservar encoding e quebras de linha dos arquivos editados. Não normalizar o widget inteiro sem decisão do usuário.
-- Ambiente registrado: jQuery 3.6.3, Bootstrap 3.4.1 e Style Guide 2.5.0, fornecidos pelo Fluig; não carregar outra cópia. JavaScript novo/alterado deve usar jQuery; escopar por `this.DOM`/`instanceId` e CSS por `.fluig-style-guide.nwi`.
+Próximo índice livre: 3
 
-## Regras de negócio preservadas
+## Parâmetros de configuração (`edit.ftl`)
+Nenhum (só o card de identificação).
+
+## Dados (essencial; detalhes em `docs/referencias-backend.md`)
+- Dataset `dsNwEmbalagens`, chamado por `chamarEmbalagens`. O publicado no Fluig é sempre o `dsNwEmbalagens.js` do GitHub
+  **`DataIT-Solucoes/BP-NW-DATASET`**: ler esse arquivo antes de usar ação, parâmetro ou campo. Não editar o Dataset sem pedido.
+- Ações: `consultarParametros`, `apoiarEstabelecimentos`, `apoiarItens`, `consultarTiposApoio`, `incluirParametro`, `alterarParametro`
+  (`ALTERAR`, `INATIVAR`, `EXCLUIR`). Presença no fonte não comprova liberação no Fluig.
+
+## Regras de negócio
 - Sem botão Limpar nos filtros.
-- Estabelecimento e item não mudam na edição.
+- Estabelecimento e item não mudam na edição (só tipo de embalagem e capacidade).
 - Unidade vem do item, sem digitação manual.
 - Capacidade maior que zero, com até quatro casas decimais.
 - Conversão de unidade pertence ao salvamento; regra a definir.
+- Gravação com versão e chave idempotente: resultado incerto pede conferência (Buscar) antes de nova tentativa; não repetir automaticamente.
 
-## Continuidade
-- Estado e retomada: [AI_HANDOFF.md](contexto-ia/AI_HANDOFF.md).
-- Decisões aprovadas: [AI_DECISIONS.md](contexto-ia/AI_DECISIONS.md).
-- Pendências: [AI_TODO.md](contexto-ia/AI_TODO.md).
-- Referências: [AI_REFERENCES.md](contexto-ia/AI_REFERENCES.md).
+## Forma de trabalho (pedidos do usuário)
+Depois de **qualquer** ajuste, inclusive só em `.md`, **uma chamada só**:
+```
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/entregar.ps1 -Mensagem "FIX: Texto" <arquivos...>
+```
+- Confere BOM e quebra de linha misturada nos fontes de `src/`; se algum arquivo estiver em `src/`, roda `node --check` e gera
+  `target/widget_nw_itensComCtrllDeEmb.war` (`pack-widget.ps1`; Ctrl+F7 no VSCode faz o mesmo). Só `.md`: pula os dois.
+- Commit **só dos arquivos informados** (nunca `target/` nem `BADGE_FILTROS.md`; apagado/renomeado: passar o caminho antigo também),
+  em português, **sem coautor** e **sempre com prefixo**: `DOCS: Texto` (`.md`, `AGENTS.md`, `docs/`), `FIX: Texto` (código em `src/`),
+  `CHORE: Texto` (manutenção, build, renomear sem mudar conteúdo).
+- Push no branch atual e conferência do remoto (`git ls-remote`). `-Simular` faz tudo menos commit e push.
+- Importar no Fluig (Painel de Controle → Desenvolvimento → Widgets): feito pelo usuário.
+
+Ao fim da tarefa, atualizar **só** o arquivo de `docs/` afetado: decisão nova → `decisoes.md`; pergunta ou proposta → `pendencias.md`
+(resolvida: tirar de lá); levantamento no backend → `referencias-backend.md`; mudança de comportamento da tela → `tela-e-codigo.md`.
+O `README.md` só muda quando a visão geral mudar.

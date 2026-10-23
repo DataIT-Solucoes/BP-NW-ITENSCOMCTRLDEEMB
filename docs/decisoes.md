@@ -19,6 +19,7 @@
 ## Forma de trabalho
 | Data | Decisão | Origem |
 |---|---|---|
+| 23/10 | `BADGE_FILTROS.md` passa a ser versionado no git (deixa de ser "arquivo do usuário, fora do git") | Usuário: "é pra incluir" |
 | 21/10 | Skill `fluig-branco-peres` local em `.claude/skills/` (cópia igual nos 4 widgets, sem cópia global); `.claude/` inteira no git | Usuário |
 | 21/10 | Mesma organização do `widget_nw_bags`: regras no `AGENTS.md` (enxuto), `CLAUDE.md` só com `@AGENTS.md`; `contexto-ia/` vira `docs/` (decisoes, pendencias, referencias-backend, tela-e-codigo); `AI_HANDOFF` removido (histórico = `git log`); atualizar só o arquivo afetado | Usuário |
 | 21/10 | Entrega por `scripts/entregar.ps1` (conferências, `.war`, commit só dos arquivos informados, push). **Mensagem de commit sempre com prefixo:** `DOCS: Texto`, `FIX: Texto`, `CHORE: Texto`; sem coautor | Usuário (padrão do `widget_nw_bags`) |

@@ -11,7 +11,7 @@
 | `docs/pendencias.md` | Perguntas em aberto, propostas não aprovadas e o que falta confirmar no Fluig de TESTE |
 | `docs/referencias-backend.md` | Contrato do Dataset (ações, parâmetros, campos), fontes da verdade, códigos de erro |
 | `docs/tela-e-codigo.md` | Tela, modais e colunas; arquitetura e **mapa das funções do JS** (achar pelo mapa + Grep). O fonte manda |
-| `BADGE_FILTROS.md` | Receita do badge dentro dos campos de filtro (arquivo do usuário, fora do git) |
+| `BADGE_FILTROS.md` | Receita do badge dentro dos campos de filtro |
 | `README.md` | Visão geral para pessoas (GitHub). **Não precisa ler para trabalhar** |
 
 Histórico e estado do trabalho: `git log`.
@@ -59,7 +59,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/entregar.ps1 -Me
 ```
 - Confere BOM e quebra de linha misturada nos fontes de `src/`; se algum arquivo estiver em `src/`, roda `node --check` e gera
   `target/widget_nw_itensComCtrllDeEmb.war` (`pack-widget.ps1`; Ctrl+F7 no VSCode faz o mesmo). Só `.md`: pula os dois.
-- Commit **só dos arquivos informados** (nunca `target/` nem `BADGE_FILTROS.md`; apagado/renomeado: passar o caminho antigo também),
+- Commit **só dos arquivos informados** (nunca `target/`; apagado/renomeado: passar o caminho antigo também),
   em português, **sem coautor** e **sempre com prefixo**: `DOCS: Texto` (`.md`, `AGENTS.md`, `docs/`), `FIX: Texto` (código em `src/`),
   `CHORE: Texto` (manutenção, build, renomear sem mudar conteúdo).
 - Push no branch atual e conferência do remoto (`git ls-remote`). `-Simular` faz tudo menos commit e push.

@@ -32,7 +32,7 @@
 |---|---|
 | Widget | `https://github.com/HumbertoAlcantaraArruda/BP-WIDGET-ITENSCOMCTRLDEEMB`, branch `master` |
 | Dataset publicado | `https://github.com/DataIT-Solucoes/BP-NW-DATASET` → `dsNwEmbalagens.js` |
-| Receita dos badges nos filtros | `BADGE_FILTROS.md` (não rastreado, do usuário) |
+| Receita dos badges nos filtros | `BADGE_FILTROS.md` |
 | Protótipo histórico | `https://humcode.com.br/mockup-fluig.html` (não consultado em 20/10) |
 
 ## Levantado em 20/10/2026

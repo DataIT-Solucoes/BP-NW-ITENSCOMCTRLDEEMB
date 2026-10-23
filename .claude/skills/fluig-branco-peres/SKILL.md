@@ -25,6 +25,7 @@ tabela das notas do Style Guide, pegadinhas, regras de trabalho). Esta skill **n
 | Extras de ambiente: CDN/SRI e fallback, `$.trim`, encoding, atalho Progress | `references/ambiente-e-regras.md` |
 | Widget novo: `application.info` completo, ganchos `data-*`, `edit.ftl`, checklist | `references/estrutura-widget.md` |
 | Visual: paleta, classes `nwX-*`, cabeçalho, filtros, tabela, modais, CDN | `references/padrao-visual-nw.md` |
+| Cabeçalho da tabela (Tabulator) fixo ao descer a página: código pronto, adaptação, teste | `references/cabecalho-fixo-tabela.md` |
 | Dados: Dataset, serviço, REST Datasul, idempotência, erros | `references/integracao-dataset-datasul.md` |
 | O que cada widget existente faz e em que estado está | `references/widgets-existentes.md` |
 | Negócio e dados do Controle de Embalagens: telas, etiquetas, filtros suportados, ações do Dataset, estados de prontidão | `references/projeto-controle-embalagens.md` |

@@ -53,8 +53,9 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/entregar.ps1 -Me
 - Confere BOM e quebra de linha misturada nos fontes de `src/`; se algum arquivo estiver em `src/`, roda `node --check` e gera
   `target/<nome_do_widget>.war` (`pack-widget.ps1`; Ctrl+F7 no VSCode faz o mesmo). Só `.md`: pula os dois.
 - Commit **só dos arquivos informados** (nunca `target/`; apagado/renomeado: passar o caminho antigo também), em português,
-  **sem coautor** e **sempre com prefixo**: `DOCS: Texto` (`.md`, `AGENTS.md`, `docs/`), `FIX: Texto` (código em `src/`),
-  `CHORE: Texto` (manutenção, build, renomear sem mudar conteúdo).
+  **sem coautor** e **sempre com prefixo** (`FIX`, `FEAT`, `REFACTOR`, `PERF`, `STYLE`, `DOCS`, `TEST`, `CHORE`, `CI`, `BUILD`,
+  `REVERT`, `SECURITY`): `DOCS: Texto` (`.md`, `AGENTS.md`, `docs/`), `FIX: Texto` (correção em `src/`), `FEAT: Texto` (funcionalidade nova),
+  `CHORE: Texto` (manutenção, renomear sem mudar conteúdo).
 - Push no branch atual e conferência do remoto (`git ls-remote`). `-Simular` faz tudo menos commit e push.
 - Importar no Fluig (Painel de Controle → Desenvolvimento → Widgets): feito pelo usuário.
 

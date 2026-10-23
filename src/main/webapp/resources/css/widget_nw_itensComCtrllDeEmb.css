@@ -697,6 +697,24 @@
     pointer-events: none;
 }
 
+/* cabeçalho fixo: cópia do cabeçalho da tabela presa no topo ao descer a página (prepararCabecalhoFixo; top, left e width no JS) */
+.fluig-style-guide.nwi .nwi-cabecalho-fixo {
+    position: fixed;
+    z-index: 40;
+    overflow: hidden;
+    border-radius: 0 0 14px 14px;
+    box-shadow: 0 6px 16px rgba(32, 32, 30, 0.12);
+}
+
+.fluig-style-guide.nwi .nwi-cabecalho-fixo > .nwi-tabela.tabulator {
+    margin: 0;
+    border-radius: 0 0 14px 14px;
+}
+
+.fluig-style-guide.nwi .nwi-cabecalho-fixo .tabulator-header {
+    overflow: hidden;
+}
+
 .fluig-style-guide.nwi .nwi-tabela.tabulator .tabulator-row {
     border-bottom: 1px solid #EEECE4;
     background-color: #fff;

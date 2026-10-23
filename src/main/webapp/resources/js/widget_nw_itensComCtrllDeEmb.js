@@ -21,6 +21,8 @@ var widget_nw_itensComCtrllDeEmb = (function () {
     var LIMITE_PAGINA_PARAMETROS = 100;
     var ATRASO_CONSULTA_TIPOS_MS = 250;
     var ATRASO_CONSULTA_APOIO_MS = 350;
+    // cabeçalho fixo da tabela: distância do topo da janela (abaixo da barra do Fluig; mesmo valor do widget_nw_bags)
+    var TOPO_CABECALHO_FIXO = 100;
 
     var MENSAGENS_ERRO = {
         AUTORIZACAO_NAO_CONFIGURADA: 'O acesso a esta tela ainda não foi configurado no Fluig (grupos e permissões).',
@@ -578,6 +580,68 @@ var widget_nw_itensComCtrllDeEmb = (function () {
             });
             // a tabela só aceita dados depois de construída
             this.tabela.on('tableBuilt', function () { self.carregarParametros(); });
+            this.prepararCabecalhoFixo();
+        },
+
+        // Cabeçalho fixo (copiado do widget_nw_bags): ao descer a página, uma cópia do .tabulator-header fica presa no topo,
+        // alinhada à tabela, até o fim dela. A cópia é refeita quando a tabela redesenha (ordenação, largura das colunas, resize).
+        // Clicar numa coluna da cópia ordena a tabela de verdade. Fica dentro do widget (não no body) e só para leitor de tela some
+        prepararCabecalhoFixo: function () {
+            var tabela = this.tabela,
+                $tabela = $(tabela.element),
+                desatualizado = true,
+                evento = '.nwiCabecalhoFixo' + this.instanceId;
+            var $fixo = $('<div>', { 'class': 'nwi-cabecalho-fixo', 'aria-hidden': 'true', hidden: true })
+                .css('top', TOPO_CABECALHO_FIXO + 'px')
+                .appendTo(this.DOM);
+
+            // a cópia vai dentro de uma div com as classes da tabela, para pegar o mesmo CSS (.nwi-tabela.tabulator .tabulator-header)
+            var copiar = function () {
+                var $copia = $tabela.children('.tabulator-header').clone();
+                $copia.find('[id]').removeAttr('id');
+                $copia.find('[tabindex]').addBack('[tabindex]').removeAttr('tabindex');
+                $fixo.empty().append($('<div>', {
+                    'class': $tabela.attr('class'),
+                    'tabulator-layout': $tabela.attr('tabulator-layout')
+                }).append($copia));
+                desatualizado = false;
+            };
+
+            var ajustar = function () {
+                var caixa = $tabela[0].getBoundingClientRect(),
+                    alturaCabecalho = $tabela.children('.tabulator-header').outerHeight() || 0,
+                    alturaRodape = $tabela.children('.tabulator-footer').outerHeight() || 0;
+                var mostrar = $tabela.is(':visible') &&
+                    caixa.top < TOPO_CABECALHO_FIXO &&
+                    caixa.bottom - alturaRodape > TOPO_CABECALHO_FIXO + alturaCabecalho;
+                if (!mostrar) {
+                    $fixo.prop('hidden', true);
+                    return;
+                }
+                if (desatualizado || $fixo.prop('hidden')) copiar();
+                $fixo.css({ left: caixa.left + 'px', width: caixa.width + 'px' }).prop('hidden', false);
+                // rolagem horizontal da tabela (tela estreita): a cópia acompanha
+                $fixo.find('.tabulator-header').scrollLeft($tabela.children('.tabulator-tableholder').scrollLeft());
+            };
+
+            var refazer = function () {
+                desatualizado = true;
+                ajustar();
+            };
+            $.each(['renderComplete', 'dataSorted', 'columnResized'], function (i, nome) {
+                tabela.on(nome, refazer);
+            });
+            $(window).off(evento)
+                .on('scroll' + evento, ajustar)
+                .on('resize' + evento, refazer);
+            $tabela.children('.tabulator-tableholder').on('scroll' + evento, ajustar);
+
+            $fixo.on('click', '.tabulator-col[tabulator-field]', function () {
+                var coluna = tabela.getColumn($(this).attr('tabulator-field'));
+                if (coluna && coluna.getDefinition().headerSort !== false) {
+                    coluna.getElement().dispatchEvent(new MouseEvent('click', { bubbles: true }));
+                }
+            });
         },
 
         definirColunas: function () {

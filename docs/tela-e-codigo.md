@@ -11,6 +11,10 @@
 - Tabela Tabulator (`data-tabela`), paginação local de 10, contador "Mostrando X–Y de N", ordem inicial por estabelecimento:
   Estabelecimento | Item | Unidade (chip) | Tipo de Embalagem | Capacidade (4 casas) | Situação (Ativo/Inativo) | Ações.
   Estabelecimento/Item/Tipo como `código — descrição` (sem descrição: só o código). Ações: interruptor Ativo (grava na hora), Editar, Excluir.
+- **Cabeçalho fixo** (23/10, copiado do `widget_nw_bags`, `prepararCabecalhoFixo`): ao descer a página, uma cópia do `.tabulator-header`
+  fica em `.nwi-cabecalho-fixo` (`position: fixed`, `top` = `TOPO_CABECALHO_FIXO` = 100px, `left`/`width` da tabela), `aria-hidden`,
+  enquanto o topo da tabela passou dessa linha e ainda sobra corpo abaixo. Refeita em `renderComplete`, `dataSorted`, `columnResized` e
+  no resize; acompanha a rolagem horizontal. Clicar numa coluna da cópia ordena a tabela original.
 - Modal **cadastro** (`<dialog>` `data-modal-cadastro`): Estabelecimento, Item, Unidade (readonly, vem do item), Tipo de Embalagem, Capacidade.
   Novo: "Novo item controlado" / "Criar parametrização". Editar: "Editar item controlado" / "Salvar alterações"; Estabelecimento e Item
   `readonly` e sem autocomplete. Erros por campo em `data-erro="<campo>"`; erro geral em `data-cadastro-mensagem`.
@@ -52,7 +56,7 @@ Métodos do SuperWidget, por assunto:
 |---|---|
 | Abas | `prepararAbas`, `selecionarAba`, `navegarAbas`, `ativarAba`, `moverIndicador` |
 | Filtros e autocomplete | `prepararSelectSituacao`, `prepararAutocompletesDosFiltros`, `prepararAutocompletesDoCadastro`, `prepararAutocompleteTipoDoCadastro`, `prepararAutocompleteApoio`, `mostrarSelecionado`, `removerSelecionado`, `cancelarConsultaApoio`, `consultarApoio`, `montarSugestoesApoio`, `definirTipoNoCadastro`, `preencherUnidade` |
-| Tabela | `carregarTabulator`, `montarTabela`, `definirColunas`, `tratarCliqueNasAcoes`, `alterarSituacao`, `montarBotoesAcoes`, `reaplicarOrdem`, `mostrarPaginaDaLinha` |
+| Tabela | `carregarTabulator`, `montarTabela`, `prepararCabecalhoFixo`, `definirColunas`, `tratarCliqueNasAcoes`, `alterarSituacao`, `montarBotoesAcoes`, `reaplicarOrdem`, `mostrarPaginaDaLinha` |
 | Carga e busca | `definirCarregando`, `carregarParametros`, `cancelarCarga`, `exibirItensCarregados`, `mostrarErroDaCarga`, `buscar`, `montarFiltrosDaBusca` |
 | Modal cadastro | `prepararModalCadastro`, `obterCampoDoCadastro`, `abrirModalNovo`, `abrirModalEditar`, `abrirModalCadastro`, `preencherFormularioComLinha`, `fecharModalCadastro`, `limparFormulario`, `marcarErro`, `obterOpcaoEscolhida`, `salvar`, `lerEscolhasDoFormulario`, `validarEscolhas`, `montarRegistro` |
 | Gravação | `montarComandoParametro`, `definirGravando`, `executarComandoParametro`, `informarFalhaComando`, `aplicarFotografiaParametro`, `gravarAlteracao`, `gravarRegistro` |

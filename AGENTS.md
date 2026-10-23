@@ -11,6 +11,7 @@
 | `docs/pendencias.md` | Perguntas em aberto, propostas não aprovadas e o que falta confirmar no Fluig de TESTE |
 | `docs/referencias-backend.md` | Contrato do Dataset (ações, parâmetros, campos), fontes da verdade, códigos de erro |
 | `docs/tela-e-codigo.md` | Tela, modais e colunas; arquitetura e **mapa das funções do JS** (achar pelo mapa + Grep). O fonte manda |
+| `testes/LEIA-ME.md` | Testes locais (jsdom, bibliotecas reais, pedidos validados pelo Dataset do GitHub, respostas simuladas): `cd testes && npm test`, tem de dar `FALHARAM=0`. Rodar depois de mexer no JS |
 | `BADGE_FILTROS.md` | Receita do badge dentro dos campos de filtro |
 | `README.md` | Visão geral para pessoas (GitHub). **Não precisa ler para trabalhar** |
 

@@ -1,0 +1,15 @@
+{
+  "name": "testes-widget-nw-itenscomctrlldeemb",
+  "private": true,
+  "description": "Testes do widget_nw_itensComCtrllDeEmb: locais com jsdom e bibliotecas reais (mesmas versões do Fluig/CDN), pedidos validados pelo dsNwEmbalagens.js do GitHub",
+  "type": "commonjs",
+  "scripts": {
+    "test": "node rodar-testes.cjs"
+  },
+  "devDependencies": {
+    "jquery": "3.6.3",
+    "jsdom": "25.0.1",
+    "select2": "4.0.13",
+    "tabulator-tables": "6.4.0"
+  }
+}

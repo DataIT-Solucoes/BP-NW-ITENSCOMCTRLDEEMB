@@ -35,6 +35,16 @@
 | Receita dos badges nos filtros | `BADGE_FILTROS.md` |
 | Protótipo histórico | `https://humcode.com.br/mockup-fluig.html` (não consultado em 20/10) |
 
+## Levantado em 23/10/2026 (`dsNwEmbalagens.js` do GitHub, main; conferido por `testes/testar-contrato-github.cjs`)
+- As 6 ações do widget existem e estão liberadas ao DefaultGroup-1; `incluirParametro`/`alterarParametro` estão em `escritasHabilitadas`
+  (no fonte; liberação no Fluig continua não vista).
+- Regra do DefaultGroup-1 para `consultarParametros`, `apoiarEstabelecimentos`, `apoiarItens`, `incluirParametro`, `alterarParametro`:
+  estabelecimentos `10904` e `11301`. `consultarTiposApoio` = `apoiarTipos` (sem estabelecimento; aceita `ativo: "todos"`).
+- `apoiarItens` sem `codEstabel`: o Dataset completa com o 1º estabelecimento permitido (filtro Item sem estabelecimento escolhido).
+- `incluirParametro`/`alterarParametro`: `unidade` é obrigatória e não vazia (`PARAMETRO_OBRIGATORIO`); `idParam`/`versao` inteiros >= 0;
+  `capacidade` número >= 0. Tetos: `consultarParametros` 100, apoios 20.
+- Consulta paginada: o Dataset exige `total` = tamanho de `dados`, `temMais` booleano e, com `temMais`, `proximoId` numérico maior que o `aposId`.
+
 ## Levantado em 20/10/2026
 - `application.info`: versão 0.1.0, categoria SYSTEM, JS .1 e CSS .2. O card do `edit.ftl` diz "v1.0", diferente da versão dos metadados.
 - `view.ftl`: Bootstrap Icons 1.11.3, Mulish, Tabulator 6.4.0 (CSS) e Select2 4.0.13 com pt-BR; JS do Tabulator carregado pelo próprio widget.

@@ -10,7 +10,13 @@
 - Política de gravação do switch Situação: o contexto anterior deixava em aberto; o código atual grava na hora (`alterarSituacao`),
   o que não comprova aprovação de negócio.
 
+## Propostas não aprovadas
+- Item sem unidade no `apoiarItens` (`un` ausente): o Novo manda `unidade: ""` e o Dataset recusa com `PARAMETRO_OBRIGATORIO`
+  ("Faltam parametros obrigatorios desta acao."). Proposta: validar no modal ("O item escolhido não tem unidade."). Visto nos testes
+  locais (23/10), não no TESTE.
+
 ## Confirmar no Fluig de TESTE (nada visto ainda)
+> Os testes locais (`testes/`, 23/10) cobrem a lógica do JS com respostas simuladas; não substituem esta lista.
 - Consulta inicial, filtros, descrições retornadas e paginação por cursor.
 - Autocompletes do modal e dos filtros; badge e botão × limpando texto, código e seleção.
 - Inclusão, edição, exclusão e troca de situação.

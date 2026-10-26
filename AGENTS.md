@@ -64,6 +64,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/entregar.ps1 -Me
   em português, **sem coautor** e **sempre com prefixo**: `DOCS: Texto` (`.md`, `AGENTS.md`, `docs/`), `FIX: Texto` (código em `src/`),
   `CHORE: Texto` (manutenção, build, renomear sem mudar conteúdo).
 - Push no branch atual e conferência do remoto (`git ls-remote`). `-Simular` faz tudo menos commit e push.
+- **Versão:** a cada entrega com mudança em `src/`, subir `application.version` no `application.info` (patch: FIX 0.1.1 → 0.1.2; funcionalidade nova: minor) e atualizar a versão citada em `README.md` e `docs/referencias-backend.md`, no mesmo commit. Versão atual: 0.1.1.
 - Importar no Fluig (Painel de Controle → Desenvolvimento → Widgets): feito pelo usuário.
 
 Ao fim da tarefa, atualizar **só** o arquivo de `docs/` afetado: decisão nova → `decisoes.md`; pergunta ou proposta → `pendencias.md`

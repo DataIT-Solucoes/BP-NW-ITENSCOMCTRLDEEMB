@@ -57,7 +57,7 @@
 - Consulta paginada: o Dataset exige `total` = tamanho de `dados`, `temMais` booleano e, com `temMais`, `proximoId` numérico maior que o `aposId`.
 
 ## Levantado em 20/10/2026
-- `application.info`: versão 0.1.0, categoria SYSTEM, JS .1 e CSS .2. O card do `edit.ftl` diz "v1.0", diferente da versão dos metadados.
+- `application.info`: versão 0.1.1, categoria SYSTEM, JS .1 e CSS .2. O card do `edit.ftl` diz "v1.0", diferente da versão dos metadados.
 - `view.ftl`: Bootstrap Icons 1.11.3, Mulish, Tabulator 6.4.0 (CSS) e Select2 4.0.13 com pt-BR; JS do Tabulator carregado pelo próprio widget.
 - Build: o `.war` tem 12 entradas (`src/main/webapp/` na raiz, `src/main/resources/` em `WEB-INF/classes/`); sem `pom.xml` nem fonte Java.
   Desde 21/10 gerado por `scripts/entregar.ps1` (`pack-widget.ps1`).

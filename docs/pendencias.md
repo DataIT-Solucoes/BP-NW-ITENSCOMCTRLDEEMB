@@ -26,7 +26,8 @@
 > `FLUIGC.autocomplete` só lê); corrigido em 26/10 com `typeahead('val', '')` e conferido na página com o método trocado na instância
 > (campo vazio, sem consulta nem aviso, Buscar sem o filtro). Rolagem horizontal da tabela a 1350 px: larguras das colunas
 > reduzidas em 26/10 e conferidas na página com as definições trocadas na instância (1280, 1350 e 1920 px sem rolagem, sem cabeçalho
-> cortado, Excluir visível, cabeçalho fixo alinhado). Falta ver os dois depois de importar o `.war`.
+> cortado, Excluir visível, cabeçalho fixo alinhado). Conferidos de novo com o `.war` 0.1.1 importado (26/10, JS `?v=0.1.1`): × limpa
+> o campo (vazio, editável, sem aviso) e o Buscar lista sem o filtro; a 1280 e 1350 px a tabela não rola, Excluir visível, cabeçalho inteiro.
 - Paginação por cursor com mais de 100 parâmetros (o TESTE tem 3–4; só uma página vista).
 - Erros de permissão/escrita desabilitada e gravação incerta.
 - Conversão de unidade efetiva no backend.

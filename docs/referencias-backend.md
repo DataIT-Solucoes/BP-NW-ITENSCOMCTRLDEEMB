@@ -35,6 +35,17 @@
 | Receita dos badges nos filtros | `BADGE_FILTROS.md` |
 | Protótipo histórico | `https://humcode.com.br/mockup-fluig.html` (não consultado em 20/10) |
 
+## Levantado no Fluig de TESTE em 26/10/2026 (teste pela tela, usuário totvsrp)
+- `consultarParametros` devolve `descricaoEstabelecimento`/`descricaoItem`/`descricaoTipo`; sem mais páginas, `proximoId` vem `"0"`.
+- `apoiarItens` traz `un` e `tipoControleEstoque`; `consultarTiposApoio` traz `codigo`, `descricao`, `ativo`, `versao`.
+- Comandos devolvem `idParam` (texto), `versao` (+1 a cada comando), `excluido`, `repeticao`, `idEvento`. EXCLUIR: `excluido: true`,
+  `ativo: false`. Repetir o comando com a mesma `chaveIdempotente` devolve `repeticao: true` e o mesmo `idEvento`.
+- Versão velha: `CONFLITO_VERSAO` "A parametrizacao foi alterada por outra operacao.".
+- Apoio com filtro recusado: `FILTRO_CURTO` "Digite ao menos dois caracteres." (estabelecimento com o rótulo `código — descrição`
+  como filtro). "Confira os filtros." também apareceu (texto do `FILTRO_INVALIDO` em `contr-emb.p`); chamada não capturada,
+  provável o mesmo caso no Tipo.
+- `apoiarEstabelecimentos` com filtro `1130` sugere 11301 e 11302.
+
 ## Levantado em 23/10/2026 (`dsNwEmbalagens.js` do GitHub, main; conferido por `testes/testar-contrato-github.cjs`)
 - As 6 ações do widget existem e estão liberadas ao DefaultGroup-1; `incluirParametro`/`alterarParametro` estão em `escritasHabilitadas`
   (no fonte; liberação no Fluig continua não vista).

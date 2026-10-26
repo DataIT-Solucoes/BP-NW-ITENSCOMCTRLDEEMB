@@ -26,7 +26,7 @@ npm test           # ou: node rodar-testes.cjs  → tem de terminar com FALHARAM
   As fotografias de comando seguem o que o widget confere (`fotografiaParametroValida`): **o retorno real do backend não foi visto**.
 - Dados fictícios: estabelecimentos `10904` e `11301` (os da regra do Dataset), itens `IT-*`, tipos `CX01`, `SC02`, `TB03` (inativo).
 - **Simulado:** só o que é do Fluig, da rede ou do layout: `$.ajax`, `FLUIGC.toast`, `FLUIGC.autocomplete` (cria a cópia `tt-hint`
-  antes do campo, como o typeahead do Fluig), bindings do SuperWidget, timers com atraso, `<dialog>`, medidas e `scrollLeft`.
+  antes do campo, como o typeahead do Fluig; `val` com valor vazio só lê, como no Fluig 1.8.1, e `$.fn.typeahead("val", v)` grava), bindings do SuperWidget, timers com atraso, `<dialog>`, medidas e `scrollLeft`.
   O cabeçalho fixo usa a caixa da tabela (`getBoundingClientRect`) definida pelo teste.
 - `NWI_FONTE_WIDGET=<arquivo>` roda os testes com outra cópia do JS (ex.: defeito plantado, para conferir que os testes pegam).
 

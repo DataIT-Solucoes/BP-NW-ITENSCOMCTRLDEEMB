@@ -337,11 +337,18 @@ function ambiente(opcoes = {}) {
       const registro = { configuracao, sugestoes: null, destruido: false, fechado: 0 };
       autocompletes.set($campo[0], registro);
       return {
-        val(v) { $campo.val(v); },
+        // como o do Fluig 1.8.1: valor vazio (falsy) só lê; para limpar é preciso typeahead("val", "")
+        val(v) { if (v) { $campo.val(v); return this; } return $campo.val(); },
         close() { registro.fechado++; },
         destroy() { registro.destruido = true; $hint.remove(); $campo.removeClass("tt-input"); autocompletes.delete($campo[0]); },
       };
     },
+  };
+  // plugin do typeahead que o Fluig registra no jQuery da página: aqui só o "val"
+  $.fn.typeahead = function (metodo, valor) {
+    if (metodo !== "val") throw new Error("typeahead simulado só tem val");
+    if (arguments.length < 2) return this.val();
+    return this.val(valor);
   };
   window.SuperWidget = { extend: (definicao) => definicao };
   window.eval(fonteWidget);

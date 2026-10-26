@@ -449,7 +449,8 @@ var widget_nw_itensComCtrllDeEmb = (function () {
             if ($badge) $badge.prop('hidden', true);
             $campo.removeClass('is-selecionado').prop('readOnly', false)
                 .removeData('codigo').removeData('registro');
-            if (autocomplete) autocomplete.val('');
+            // o val('') do FLUIGC.autocomplete só lê (valor vazio = getter): limpa pelo typeahead, que zera também a consulta dele
+            if (autocomplete) $campo.typeahead('val', '');
             else $campo.val('');
             var buscaApoio = $campo.data('buscaApoio');
             if (buscaApoio) {

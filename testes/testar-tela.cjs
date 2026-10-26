@@ -127,6 +127,14 @@ executarSuite(async () => {
     assert.ok(!$campo.prop("readOnly") && !$campo.hasClass("is-selecionado"));
     assert.equal(amb.window.document.activeElement, $campo[0], "foco volta ao campo");
 
+    // visto no TESTE (26/10): com o texto no campo, o Buscar recusava ("Escolha … na lista") até apagar à mão
+    const toastsAntes = amb.toasts.length;
+    amb.$raiz.find("[data-buscar]").trigger("click");
+    await amb.ocioso();
+    assert.ok(!("codTipo" in amb.ultimaRequisicao("consultarParametros").parametros), "× deveria tirar o tipo da busca");
+    assert.equal(amb.toasts.length, toastsAntes, "Buscar depois do × não deveria avisar");
+    await amb.esperar(() => !amb.$raiz.find("[data-buscar]").prop("disabled"), "fim da busca");
+
     // escolher de novo reaproveita a mesma badge
     await amb.escolher("[data-filtro-tipo]", "SC", "SC02");
     assert.equal($campo.closest(".nwi-campo-caixa").find(".nwi-selecionado").length, 1);

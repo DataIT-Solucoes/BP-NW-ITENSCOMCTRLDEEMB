@@ -645,31 +645,33 @@ var widget_nw_itensComCtrllDeEmb = (function () {
             });
         },
 
+        // Larguras mínimas somam 1055 px: cabem sem rolagem horizontal a partir de ~1280 px de janela no Fluig (sem cortar
+        // os cabeçalhos: texto + seta + padding). Abaixo disso a tabela rola.
         definirColunas: function () {
             var self = this;
             return [
                 {
-                    title: 'Estabelecimento', field: 'estCodigo', sorter: 'string', widthGrow: 2, minWidth: 180, vertAlign: 'middle',
+                    title: 'Estabelecimento', field: 'estCodigo', sorter: 'string', widthGrow: 2, minWidth: 170, vertAlign: 'middle',
                     formatter: function (celula) {
                         var item = celula.getRow().getData();
                         return criarCelulaCodigoDescricao(item.estCodigo, item.estDescricao);
                     }
                 },
                 {
-                    title: 'Item', field: 'itemCodigo', sorter: 'string', widthGrow: 3, minWidth: 220, vertAlign: 'middle',
+                    title: 'Item', field: 'itemCodigo', sorter: 'string', widthGrow: 3, minWidth: 130, vertAlign: 'middle',
                     formatter: function (celula) {
                         var item = celula.getRow().getData();
                         return criarCelulaCodigoDescricao(item.itemCodigo, item.itemDescricao);
                     }
                 },
                 {
-                    title: 'Unidade', field: 'unidade', sorter: 'string', width: 135, vertAlign: 'middle',
+                    title: 'Unidade', field: 'unidade', sorter: 'string', width: 120, vertAlign: 'middle',
                     formatter: function (celula) {
                         return $('<span>', { 'class': 'nwi-sigla', text: celula.getValue() })[0];
                     }
                 },
                 {
-                    title: 'Tipo de Embalagem', field: 'tipoCodigo', sorter: 'string', widthGrow: 2, minWidth: 170, vertAlign: 'middle',
+                    title: 'Tipo de Embalagem', field: 'tipoCodigo', sorter: 'string', widthGrow: 2, minWidth: 190, vertAlign: 'middle',
                     formatter: function (celula) {
                         var item = celula.getRow().getData();
                         return criarCelulaCodigoDescricao(item.tipoCodigo, item.tipoDescricao);
@@ -682,7 +684,7 @@ var widget_nw_itensComCtrllDeEmb = (function () {
                     }
                 },
                 {
-                    title: 'Situação', field: 'ativo', sorter: 'boolean', width: 130, hozAlign: 'left', vertAlign: 'middle',
+                    title: 'Situação', field: 'ativo', sorter: 'boolean', width: 120, hozAlign: 'left', vertAlign: 'middle',
                     formatter: function (celula) {
                         var ativo = celula.getValue();
                         return $('<span>', {
@@ -693,7 +695,7 @@ var widget_nw_itensComCtrllDeEmb = (function () {
                 },
                 {
                     // sem ordenação de verdade: a seta do cabeçalho é só visual (CSS .nwi-col-acoes)
-                    title: 'Ações', headerSort: false, cssClass: 'nwi-col-acoes', width: 200, hozAlign: 'right', vertAlign: 'middle',
+                    title: 'Ações', headerSort: false, cssClass: 'nwi-col-acoes', width: 185, hozAlign: 'right', vertAlign: 'middle',
                     formatter: function (celula) { return self.montarBotoesAcoes(celula.getRow().getData()); },
                     cellClick: function (evento, celula) { self.tratarCliqueNasAcoes(evento, celula.getRow()); }
                 }

@@ -42,6 +42,13 @@ executarSuite(async () => {
     assert.equal(amb.$(amb.linhaDoId(1).getElement()).find("img").length, 0, "descrição virou HTML");
   });
 
+  // medido no TESTE (26/10): com a janela em 1280 px a tabela tem 1056 px; mais que isso de largura mínima = rolagem horizontal
+  await teste("colunas: larguras mínimas cabem em 1056 px (janela de 1280 px no Fluig)", async () => {
+    const amb = await ambiente().iniciar();
+    const minimo = amb.tabela().getColumnDefinitions().reduce((soma, d) => soma + (d.width || d.minWidth || 0), 0);
+    assert.ok(minimo <= 1056, "soma das larguras mínimas = " + minimo + " px");
+  });
+
   await teste("sem dados: placeholder e contador vazio", async () => {
     const amb = await ambiente({ quantidade: 0 }).iniciar();
     assert.equal(amb.$raiz.find(".tabulator-placeholder").text().trim(), "Nenhum item controlado encontrado.");

@@ -11,6 +11,9 @@
 - Tabela Tabulator (`data-tabela`), paginação local de 10, contador "Mostrando X–Y de N", ordem inicial por estabelecimento:
   Estabelecimento | Item | Unidade (chip) | Tipo de Embalagem | Capacidade (4 casas) | Situação (Ativo/Inativo) | Ações.
   Estabelecimento/Item/Tipo como `código — descrição` (sem descrição: só o código). Ações: interruptor Ativo (grava na hora), Editar, Excluir.
+  Larguras (26/10, `fitColumns`): mínimas Estabelecimento 170, Item 130, Tipo 190 (crescem 2/3/2); fixas Unidade 120, Capacidade 140,
+  Situação 120, Ações 185. Soma 1055 px: sem rolagem horizontal a partir de ~1280 px de janela (tabela de 1056 px no TESTE) e sem
+  cortar cabeçalho; abaixo disso a tabela rola. `testar-tela.cjs` confere a soma.
 - **Cabeçalho fixo** (23/10, copiado do `widget_nw_bags`, `prepararCabecalhoFixo`): ao descer a página, uma cópia do `.tabulator-header`
   fica em `.nwi-cabecalho-fixo` (`position: fixed`, `top` = `TOPO_CABECALHO_FIXO` = 100px, `left`/`width` da tabela), `aria-hidden`,
   enquanto o topo da tabela passou dessa linha e ainda sobra corpo abaixo. Refeita em `renderComplete`, `dataSorted`, `columnResized` e

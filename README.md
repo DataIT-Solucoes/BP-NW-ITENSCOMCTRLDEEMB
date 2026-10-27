@@ -23,7 +23,7 @@ Botão: "Criar parametrização" (novo) / "Salvar alterações" (edição).
 ## Estrutura e recursos
 | Arquivo | Responsabilidade |
 |---|---|
-| `src/main/resources/application.info` | Aplicação 0.1.1; JS Índice 1, CSS Índice 2; próximo Índice livre 3 |
+| `src/main/resources/application.info` | Aplicação 0.1.2; JS Índice 1, CSS Índice 2; próximo Índice livre 3 |
 | `src/main/resources/view.ftl` | Tela principal e diálogos |
 | `src/main/resources/edit.ftl` | Card de identificação; nenhum parâmetro configurável |
 | `src/main/webapp/resources/js/widget_nw_itensComCtrllDeEmb.js` | SuperWidget, tabela, apoios e dataset |

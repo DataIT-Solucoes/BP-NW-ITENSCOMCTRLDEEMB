@@ -48,8 +48,10 @@ var widget_nw_itensComCtrllDeEmb = (function () {
         });
 
         var resultado = requisicao.then(function (transporte) {
+            if (acao === ACAO_INCLUIR_PARAMETRO && window.console) console.log('[itensControlados] Retorno do ' + acao + ':', transporte);
             return extrairEnvelope(transporte, acao);
         }, function (jqXHR, textStatus) {
+            if (acao === ACAO_INCLUIR_PARAMETRO && window.console) console.log('[itensControlados] Falha no ' + acao + ':', textStatus, jqXHR.status, jqXHR.responseText);
             throw new Error(textStatus === 'abort' ? 'Chamada cancelada.' : 'Falha HTTP ' + jqXHR.status + ' no transporte Fluig.');
         });
         resultado.abort = function () { requisicao.abort(); };

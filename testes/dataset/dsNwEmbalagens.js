@@ -18,7 +18,7 @@ var NW_CONFIG = {
             "confirmarEtiqueta", "estornarEtiqueta", "inutilizarEtiqueta", "registrarPerdaExtravio", "consultarHistoricoEtiqueta",
             "abrirBag", "alterarBag", "comandarConteudoBag", "executarEventoBag", "consultarElegiveisBag", "consultarHistoricoBag",
             "consultarRecebimentos", "consultarItensRecebimento", "consultarEmbalagensRecebimento", "reconciliarReservaWt",
-            "apoiarEmbalagens", "apoiarBags", "apoiarSeries", "apoiarNaturezas", "apoiarEmitentes"], estabelecimentos: ["10904", "11301"] }
+            "apoiarEmbalagens", "apoiarBags", "apoiarSeries", "apoiarNaturezas", "apoiarNaturezasEntrada", "apoiarNaturezasSaida", "apoiarEmitentes"], estabelecimentos: ["10904", "11301"] }
     ]
 };
 
@@ -38,6 +38,8 @@ var NW_ACOES = {
     apoiarBags: nwGet("/apoios/bags", true, "codEstabel filtro aposCodigo limite", "codEstabel filtro", "proximoCodigo", "aposCodigo", 20),
     apoiarSeries: nwGet("/apoios/series", true, "codEstabel filtro aposCodigo limite", "codEstabel filtro", "proximoCodigo", "aposCodigo", 20),
     apoiarNaturezas: nwGet("/apoios/naturezas", true, "codEstabel filtro aposCodigo limite", "codEstabel filtro", "proximoCodigo", "aposCodigo", 20),
+    apoiarNaturezasEntrada: nwGet("/apoios/naturezas-entrada", true, "codEstabel filtro aposCodigo limite", "codEstabel filtro", "proximoCodigo", "aposCodigo", 20),
+    apoiarNaturezasSaida: nwGet("/apoios/naturezas-saida", true, "codEstabel filtro aposCodigo limite", "codEstabel filtro", "proximoCodigo", "aposCodigo", 20),
     apoiarEmitentes: nwGet("/apoios/emitentes", true, "codEstabel filtro aposCodigo limite", "codEstabel filtro", "proximoCodigo", "aposCodigo", 20),
     apoiarEstabelecimentos: nwGet("/apoios/estabelecimentos", true, "filtro aposCodigo limite", "filtro", "proximoCodigo", "aposCodigo", 20),
     apoiarItens: nwGet("/apoios/itens", true, "codEstabel filtro tipoControleEstoque aposCodigo limite", "filtro", "proximoCodigo", "aposCodigo", 20),
@@ -248,7 +250,7 @@ function nwParametros(texto, regra) {
 }
 
 function nwNovoAutocomplete(r) {
-    return nwIndice(["/apoios/embalagens", "/apoios/bags", "/apoios/series", "/apoios/naturezas", "/apoios/emitentes"], r.rota) >= 0;
+    return nwIndice(["/apoios/embalagens", "/apoios/bags", "/apoios/series", "/apoios/naturezas", "/apoios/naturezas-entrada", "/apoios/naturezas-saida", "/apoios/emitentes"], r.rota) >= 0;
 }
 function nwValidarAutocomplete(p, r) {
     p.filtro = p.filtro.replace(/^\s+|\s+$/g, "");

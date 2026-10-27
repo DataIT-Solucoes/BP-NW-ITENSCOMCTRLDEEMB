@@ -3,10 +3,12 @@
 const assert = require("node:assert/strict");
 const { ambiente, pausa, igual, criarSuite, executarSuite } = require("./ambiente.cjs");
 
-// widget iniciado sem respostas automáticas: a 1ª página da carga fica pendente
+// widget iniciado sem respostas automáticas e Buscar clicado: a 1ª página da carga fica pendente
 async function semServidor(opcoes = {}) {
   const amb = ambiente(Object.assign({ servidor: false }, opcoes));
   amb.widget.init();
+  await amb.abrir();
+  amb.$raiz.find("[data-buscar]").trigger("click");
   await amb.esperar(() => amb.pendentes("consultarParametros").length === 1, "1ª página da carga");
   return amb;
 }
@@ -122,7 +124,9 @@ executarSuite(async () => {
     assert.equal(amb.scripts[0].opcoes.url, "https://cdnjs.cloudflare.com/ajax/libs/tabulator/6.4.0/js/tabulator.min.js");
     amb.carregarTabulator();
     amb.scripts[0].carregar();
-    await amb.esperar(() => amb.pendentes("consultarParametros").length === 2, "carga das duas instâncias");
+    await amb.abrir();
+    await amb.abrir(outra.widget);
+    assert.equal(amb.requisicoes.length, 0, "a abertura consultou o Dataset");
 
     amb = ambiente({ tabulator: false });
     amb.widget.init();

@@ -27,7 +27,8 @@
 - Tudo dentro de uma IIFE: `var widget_nw_itensComCtrllDeEmb = (function () { ... return SuperWidget.extend({...}); })();`.
 - **Transporte**: `chamarEmbalagens(acao, parametros)` (`$.ajax` POST no dataset search) → `extrairEnvelope` (uma linha, `resultadoJson`,
   `sucesso` booleano). Devolve promessa com `.abort()`.
-- **Carga** (`carregarParametros`): lê todas as páginas de `consultarParametros` (100 por página, cursor `proximoId` → `aposId`; recusa cursor
+- **Abertura**: sem consulta; no `tableBuilt` só libera Buscar e Novo. A tabela começa vazia até o primeiro Buscar.
+- **Carga** (`carregarParametros`, chamada pelo Buscar e pelas recargas depois de gravar): lê todas as páginas de `consultarParametros` (100 por página, cursor `proximoId` → `aposId`; recusa cursor
   vazio ou repetido) e só então faz `setData`. `sequenciaCarga` descarta respostas velhas; Buscar e Novo ficam desabilitados
   (`definirCarregando`); spinner `.nwi-loader` no `tabela.alert`. Falha → mensagem na tabela + `console.error('[itensControlados] …')`.
 - **Filtros** (`montarFiltrosDaBusca`): só aceita código escolhido na lista (texto sem escolha → toast info "Escolha … na lista para buscar.").

@@ -1,4 +1,4 @@
-// Tela: carga inicial (todas as páginas), colunas e valores, paginação local, filtros com autocomplete + badge, Situação (Select2),
+// Tela: abertura sem consulta, primeira busca (todas as páginas), colunas e valores, paginação local, filtros com autocomplete + badge, Situação (Select2),
 // Buscar com os filtros escolhidos e as recusas do autocomplete.
 const assert = require("node:assert/strict");
 const { ambiente, pausa, igual, criarSuite, executarSuite } = require("./ambiente.cjs");
@@ -6,7 +6,18 @@ const { ambiente, pausa, igual, criarSuite, executarSuite } = require("./ambient
 executarSuite(async () => {
   const { teste, concluir } = criarSuite("tela");
 
-  await teste("carga inicial: 3 páginas de 100 por cursor, contador, ordem por estabelecimento", async () => {
+  await teste("abertura: tabela vazia, Buscar e Novo liberados, nenhuma consulta", async () => {
+    const amb = ambiente();
+    amb.widget.init();
+    await amb.abrir();
+    await amb.ocioso();
+    assert.equal(amb.requisicoes.filter((r) => r.acao === "consultarParametros").length, 0);
+    assert.equal(amb.tabela().getDataCount(), 0);
+    assert.ok(!amb.$raiz.find("[data-novo]").prop("disabled"), "Novo travado na abertura");
+    assert.equal(amb.textoAlerta(), "");
+  });
+
+  await teste("primeira busca sem filtros: 3 páginas de 100 por cursor, contador, ordem por estabelecimento", async () => {
     const amb = await ambiente().iniciar();
     igual(amb.requisicoes.map((r) => r.parametros), [{ limite: 100 }, { limite: 100, aposId: "100" }, { limite: 100, aposId: "200" }]);
     assert.equal(amb.tabela().getDataCount(), 230);

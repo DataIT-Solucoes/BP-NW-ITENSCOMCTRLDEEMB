@@ -441,17 +441,25 @@ function ambiente(opcoes = {}) {
   const textoAlerta = () => $raiz.find("[data-tabela] .tabulator-alert").text().trim();
   const ultimaRequisicao = (acao) => requisicoes.filter((r) => r.acao === acao).at(-1);
 
+  // tabela construída e Buscar liberado (o init não consulta nada)
+  async function abrir(w = widget) {
+    await esperar(() => w.tabela && w.tabela.initialized, "tabela construída");
+    await esperar(() => !$(w.DOM).find("[data-buscar]").prop("disabled"), "Buscar liberado");
+  }
+
   const amb = {
     dom, window, $, $raiz, widget, requisicoes, violacoes, temporizadores, toasts, scripts, mensagensConsole, servidor, autocompletes,
-    pendentes, atender, disparar, esperar, ocioso, digitar, escolher, campo, tabela, celulas, linhaDoId, clicarAcao, ultimoToast,
+    pendentes, atender, disparar, esperar, ocioso, abrir, digitar, escolher, campo, tabela, celulas, linhaDoId, clicarAcao, ultimoToast,
     contador, textoAlerta, ultimaRequisicao, montarInstancia, carregarTabulator,
-    // dispara o init como o Fluig (a carga sai sozinha no tableBuilt)
+    // dispara o init como o Fluig (a tela abre sem consultar) e clica em Buscar sem filtros, como o usuário
     async iniciar() {
       widget.init();
       if (servidor.ativo && opcoes.tabulator !== false) {
-        await esperar(() => widget.tabela && widget.tabela.initialized, "tabela construída");
-        await ocioso("carga inicial");
-        await esperar(() => !$raiz.find("[data-buscar]").prop("disabled"), "fim da carga inicial");
+        await abrir();
+        if (requisicoes.some((r) => r.acao === "consultarParametros")) throw new Error("a abertura da tela consultou os parâmetros");
+        $raiz.find("[data-buscar]").trigger("click");
+        await ocioso("primeira busca");
+        await esperar(() => !$raiz.find("[data-buscar]").prop("disabled"), "fim da primeira busca");
       }
       return amb;
     },

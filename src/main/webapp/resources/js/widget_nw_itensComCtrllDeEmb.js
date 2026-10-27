@@ -141,7 +141,7 @@ var widget_nw_itensComCtrllDeEmb = (function () {
         linhaEditando: null,
         linhaExcluindo: null,
 
-        // carga inicial da tabela (consultarParametros)
+        // carga da tabela pelo Buscar (consultarParametros)
         sequenciaCarga: 0,
         consultaCarga: null,
         cargaFalhou: false,
@@ -581,8 +581,8 @@ var widget_nw_itensComCtrllDeEmb = (function () {
                 },
                 columns: this.definirColunas()
             });
-            // a tabela só aceita dados depois de construída
-            this.tabela.on('tableBuilt', function () { self.carregarParametros(); });
+            // sem carga inicial: a tabela começa vazia e a consulta só acontece no Buscar
+            this.tabela.on('tableBuilt', function () { self.definirCarregando(false); });
             this.prepararCabecalhoFixo();
         },
 

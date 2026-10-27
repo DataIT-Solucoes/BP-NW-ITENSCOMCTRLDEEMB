@@ -13,7 +13,7 @@ npm test           # ou: node rodar-testes.cjs  → tem de terminar com FALHARAM
 |---|---|
 | `testar-contrato-github.cjs` | `dataset/dsNwEmbalagens.js` igual ao do GitHub `DataIT-Solucoes/BP-NW-DATASET` (main, baixado com o `gh`); as 6 ações do widget existem, liberadas ao DefaultGroup-1, escritas em `escritasHabilitadas`; limites dentro do teto; formatos de pedido aceitos |
 | `testar-transporte-dataset.cjs` | pedido ao `/api/public/ecm/dataset/search`, envelope quebrado, HTTP, recusas, cursor repetido/vazio, carga velha cancelada, Tabulator pelo CDN (uma vez por página; falha mostra aviso) |
-| `testar-tela.cjs` | carga em páginas de 100 por cursor, colunas e valores, placeholder, autocompletes dos filtros (mínimo 2, parâmetros, resposta velha, falha), badge e ×, Buscar com filtros, Select2, abas |
+| `testar-tela.cjs` | abertura sem consulta, primeira busca em páginas de 100 por cursor, colunas e valores, placeholder, autocompletes dos filtros (mínimo 2, parâmetros, resposta velha, falha), badge e ×, Buscar com filtros, Select2, abas |
 | `testar-comandos.cjs` | Novo (validações, unidade do item, só tipos ativos, `incluirParametro`), Editar (estabelecimento/item travados, `ALTERAR`), interruptor (`INATIVAR`/`ALTERAR`), Excluir (`EXCLUIR`), `CONFLITO_VERSAO`, resultado incerto com a mesma chave, repetição, recusas, trava dos modais |
 | `testar-cabecalho-fixo.cjs` | cabeçalho fixo: quando aparece/some, posição, conteúdo da cópia, ordenação pela cópia, rolagem horizontal, refazer no resize/redesenho, tabela escondida, listeners por instância, CSS |
 

@@ -12,6 +12,7 @@
 ## Tela e comportamento
 | Data | Decisão | Origem |
 |---|---|---|
+| 27/10 | **Sem carga inicial da tabela**: a tela abre vazia e a consulta só acontece quando o usuário clica em Buscar | Usuário: "Retire esse carregamento inicial da tabela, o usuário vai ter que buscar" |
 | 23/10 | **Cabeçalho fixo** na tabela principal ao descer a página, copiado da tela de bags (`widget_nw_bags`, `prepararCabecalhoFixo`) | Usuário: "aplique o thead fixo na tabela principal… copie da tela de bags" |
 | Anterior a 20/10 (data exata a definir) | Sem botão Limpar nos filtros | Usuário (AGENTS/CLAUDE anterior) |
 | Anterior a 20/10 | Base visual: paleta e layout do `widget_nw_embalagens`, prefixo `nwi`. Base funcional histórica: aba Itens Controlados do protótipo `https://humcode.com.br/mockup-fluig.html` (não consultado na migração de 20/10) | AGENTS anterior |
